@@ -1,0 +1,148 @@
+.admin-product-page {
+  max-width: 100%;
+  overflow-x: hidden;
+
+  .admin-header {
+    h2 {
+      font-size: 24px;
+    }
+  }
+}
+
+/* FILTER */
+.filter-section {
+  border: 1px solid #f1f1f1;
+
+  input,
+  select {
+    height: 40px;
+    font-size: 14px;
+  }
+}
+
+/* TABLE */
+.table-responsive {
+  overflow-x: auto;
+}
+
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+thead th {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* PRODUCT INFO */
+.admin-product-img-wrapper {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #fff;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+td {
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+/* TEXT TRUNCATE */
+.text-truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* STOCK BADGE */
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #eafaf1;
+  color: #1e8449;
+
+  &.low {
+    background: #fff4e5;
+    color: #e67e22;
+  }
+
+  &.critical {
+    background: #fdecea;
+    color: #e74c3c;
+  }
+}
+
+/* ACTION BUTTON */
+.btn-circle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+
+  &.edit {
+    background: #eef2ff;
+    color: #4f46e5;
+
+    &:hover {
+      background: #4f46e5;
+      color: #fff;
+    }
+  }
+
+  &.delete {
+    background: #fee2e2;
+    color: #dc2626;
+
+    &:hover {
+      background: #dc2626;
+      color: #fff;
+    }
+  }
+}
+
+/* PAGINATION */
+.pagination {
+  flex-wrap: wrap;
+
+  .page-link {
+    font-size: 14px;
+    min-width: 36px;
+    text-align: center;
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+  .filter-section {
+    .row > div {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+  }
+
+  table {
+    font-size: 13px;
+  }
+
+  .admin-product-img-wrapper {
+    width: 50px;
+    height: 50px;
+  }
+}

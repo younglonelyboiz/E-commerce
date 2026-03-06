@@ -1,0 +1,239 @@
+/* --- VARIABLES --- */
+$primary-color: #2563eb;       // Màu xanh chủ đạo
+$primary-dark: #1e40af;        // Màu xanh đậm khi hover
+$bg-body: #f1f5f9;             // Màu nền trang xám nhạt
+$bg-input: #f8fafc;            // Màu nền ô input
+$text-main: #1e293b;           // Màu chữ chính
+$text-muted: #64748b;          // Màu chữ phụ
+$border-color: #e2e8f0;        // Màu viền
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+/* --- ANIMATION --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.register-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: $bg-body;
+    padding: 20px;
+    font-family: 'Inter', -apple-system, sans-serif;
+
+    .register-content {
+        background: #ffffff;
+        width: 100%;
+        max-width: 800px; /* Rộng hơn để bố cục 2 cột đẹp hơn */
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: $shadow-lg;
+        animation: fadeIn 0.5s ease-out;
+
+        /* --- 1. Social Buttons --- */
+        .social-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+
+            .btn-social {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                padding: 12px;
+                border: 1px solid $border-color;
+                border-radius: 10px;
+                background: #fff;
+                font-weight: 500;
+                color: $text-main;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                font-size: 0.95rem;
+
+                &:hover {
+                    background-color: #f8fafc;
+                    border-color: $primary-color;
+                    transform: translateY(-2px);
+                    box-shadow: $shadow-sm;
+                }
+
+                &.google i { color: #db4437; font-size: 1.1rem; }
+                &.zalo .zalo-text { color: #0068ff; font-weight: 800; font-family: sans-serif; }
+            }
+        }
+
+        /* --- 2. Divider --- */
+        .divider {
+            margin: 30px 0;
+            text-align: center;
+            position: relative;
+
+            &::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 0;
+                width: 100%;
+                height: 1px;
+                background: $border-color;
+            }
+
+            span {
+                background: #fff;
+                padding: 0 15px;
+                color: $text-muted;
+                font-size: 0.85rem;
+                position: relative;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+        }
+
+        /* --- 3. Form Styling --- */
+        .register-form {
+            .section-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: $text-main;
+                margin-bottom: 20px;
+                margin-top: 10px;
+                display: flex;
+                align-items: center;
+
+                &::before {
+                    content: '';
+                    display: inline-block;
+                    width: 4px;
+                    height: 18px;
+                    background: $primary-color;
+                    margin-right: 10px;
+                    border-radius: 2px;
+                }
+            }
+
+            .form-label {
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: $text-main;
+                margin-bottom: 8px;
+            }
+
+            .form-control {
+                background-color: $bg-input;
+                border: 1px solid transparent; // Ẩn viền mặc định đi cho đẹp
+                padding: 12px 15px;
+                border-radius: 10px;
+                font-size: 0.95rem;
+                color: $text-main;
+                transition: all 0.2s;
+
+                &::placeholder { color: #94a3b8; }
+
+                &:focus {
+                    background-color: #fff;
+                    border-color: $primary-color;
+                    box-shadow: 0 0 0 4px rgba($primary-color, 0.1); // Hiệu ứng Glow xịn
+                    outline: none;
+                }
+            }
+
+            /* Password Toggle Icon */
+            .input-group-pass {
+                position: relative;
+                .toggle-icon {
+                    position: absolute;
+                    right: 15px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    cursor: pointer;
+                    color: $text-muted;
+                    transition: color 0.2s;
+                    &:hover { color: $primary-color; }
+                }
+            }
+
+            /* Checkbox */
+            .form-check-input {
+                width: 18px;
+                height: 18px;
+                margin-top: 2px;
+                cursor: pointer;
+                &:checked {
+                    background-color: $primary-color;
+                    border-color: $primary-color;
+                }
+            }
+            
+            .form-check-label {
+                cursor: pointer;
+                font-weight: 500;
+                color: $text-main;
+                margin-left: 5px;
+            }
+
+            /* --- 4. Buttons --- */
+            .btn-container {
+                margin-top: 30px;
+
+                .btn {
+                    padding: 12px 20px;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    letter-spacing: 0.3px;
+                    transition: all 0.2s;
+                    border: none;
+                }
+
+                .btn-outline-custom {
+                    background: #fff;
+                    border: 1px solid $border-color;
+                    color: $text-muted;
+                    text-decoration: none;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    &:hover {
+                        background: #f8fafc;
+                        color: $text-main;
+                        border-color: #cbd5e1;
+                    }
+                }
+
+                .btn-primary-custom {
+                    background: linear-gradient(135deg, $primary-color, $primary-dark);
+                    color: #fff;
+                    box-shadow: 0 4px 6px rgba($primary-color, 0.25);
+
+                    &:hover {
+                        transform: translateY(-1px);
+                        box-shadow: 0 6px 10px rgba($primary-color, 0.3);
+                    }
+
+                    &:active {
+                        transform: translateY(0);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .register-container {
+        padding: 10px;
+        .register-content {
+            padding: 25px;
+        }
+        .social-buttons {
+            flex-direction: column;
+        }
+    }
+}

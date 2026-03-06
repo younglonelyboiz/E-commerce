@@ -1,0 +1,247 @@
+/* --- KHAI BÁO BIẾN (Để tránh lỗi undefined) --- */
+$primary-color: #2563eb;
+$flash-color: #d0021b; /* Màu đỏ cho Flash Sale */
+$text-main: #333;
+$bg-light: #f3f4f6;
+$border-radius: 10px;
+$transition: 0.3s;
+
+.home-page {
+  background-color: $bg-light;
+  min-height: 100vh;
+  padding-bottom: 50px;
+  padding-top: 20px; // Cách header một chút
+
+  /* --- 1. HERO SECTION (Banner chính) --- */
+  .hero-section {
+    .main-banner {
+      height: 380px; // Chiều cao cố định banner lớn
+      border-radius: $border-radius;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; // Đảm bảo ảnh không bị méo
+        transition: transform 0.5s;
+        
+        &:hover {
+          transform: scale(1.02);
+        }
+      }
+    }
+
+    .sub-banner {
+      height: 185px; // Chiều cao banner nhỏ (để 2 cái cộng lại = banner lớn + gap)
+      border-radius: $border-radius;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      &:hover {
+          transform: scale(1.03);
+        }
+    }
+  }
+
+.feature-categories {
+  .cat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #1e293b;
+    transition: all 0.3s ease;
+    border: 1px solid #f1f5f9;
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+      border-color: #2563eb;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2) !important;
+      
+      .cat-icon i { color: #2563eb; }
+    }
+
+    .cat-icon i {
+      color: #487dc7;
+      transition: color 0.3s;
+    }
+  }
+
+  // Ô Điện thoại lớn
+  .big-item {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+    min-height: 292px; // 140px * 2 + 12px (gap)
+    
+    .cat-icon i {
+      font-size: 5rem; // Icon cực to
+      margin-bottom: 20px;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+    
+    .cat-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .badge-hot {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: #ef4444;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+  }
+
+  // 6 Ô nhỏ
+  .small-item {
+    height: 140px; 
+    
+    .cat-icon i {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+    
+    .cat-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      padding: 0 5px;
+    }
+  }
+}
+
+// Responsive cho Mobile
+@media (max-width: 768px) {
+  .feature-categories {
+    .big-item {
+      min-height: 200px;
+      .cat-icon i { font-size: 3.5rem; }
+    }
+    .small-item {
+      height: 110px;
+      .cat-icon i { font-size: 1.4rem; }
+    }
+  }
+}
+
+  /* --- 3. SECTION BLOCK (Khối sản phẩm) --- */
+  .section-block {
+    margin-top: 30px;
+    background-color: transparent; // Nền trong suốt để các card nổi lên nền xám của body
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 0 5px;
+
+      h2 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: $text-main;
+        margin: 0;
+        text-transform: uppercase;
+
+        /* Style riêng cho tiêu đề Flash Sale */
+        &.flash-sale-title {
+          color: $flash-color;
+          display: flex;
+          align-items: center;
+          font-style: italic;
+
+          i {
+            margin-right: 10px;
+            color: #ffc107; // Màu vàng tia sét
+            animation: flashAnimation 1s infinite alternate;
+          }
+        }
+      }
+
+      .view-all {
+        color: $primary-color;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        padding: 6px 12px;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+
+        i { margin-left: 5px; font-size: 0.8rem; }
+
+        &:hover {
+          background: $primary-color;
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  /* --- 4. BANNER GIỮA TRANG --- */
+.promo-banner-wrapper {
+    width: 100%;
+    height: 380px; // <--- CHỈNH ĐỘ CAO Ở ĐÂY (Ví dụ: 150px, 180px, 200px...)
+    border-radius: 10px; // Bo góc
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+
+    img {
+      width: 100%;
+      height: 100%;
+  
+      
+      
+      transition: transform 0.5s ease;
+
+      &:hover {
+        transform: scale(1.03); // Hiệu ứng zoom nhẹ khi di chuột
+      }
+    }
+  }
+}
+
+/* --- ANIMATION (Hiệu ứng tia sét nhấp nháy) --- */
+@keyframes flashAnimation {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.2); opacity: 0.7; }
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 991px) {
+  .hero-section {
+    .main-banner { height: auto; aspect-ratio: 16/9; }
+    .col-lg-4 { 
+      flex-direction: row !important; 
+      gap: 10px;
+      margin-top: 10px;
+      
+      .sub-banner {
+        width: 50%;
+        height: auto;
+        aspect-ratio: 16/9;
+      }
+    }
+  }
+}

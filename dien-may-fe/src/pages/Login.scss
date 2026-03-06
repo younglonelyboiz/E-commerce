@@ -1,0 +1,213 @@
+/* --- Variables --- */
+$primary-color: #2563eb;
+$primary-hover: #1d4ed8;
+$bg-body: #f8fafc;
+$text-main: #1e293b;
+$text-muted: #64748b;
+$border-color: #e2e8f0;
+$shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+
+/* --- Animation --- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: $bg-body;
+    padding: 30px 15px;
+    font-family: 'Inter', sans-serif;
+
+    .login-card {
+        background: #fff;
+        width: 100%;
+        max-width: 480px; /* Form Login thường nhỏ gọn hơn Register một chút */
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: $shadow-card;
+        animation: fadeInUp 0.5s ease-out;
+
+        .login-title {
+            font-weight: 700;
+            color: $text-main;
+            margin-bottom: 5px;
+        }
+
+        .text-muted {
+            font-size: 0.95rem;
+            color: $text-muted;
+        }
+
+        /* --- Social Buttons --- */
+        .social-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+
+            .btn-social {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                padding: 10px;
+                background: #fff;
+                border: 1px solid $border-color;
+                border-radius: 8px;
+                font-weight: 500;
+                color: $text-main;
+                transition: all 0.2s;
+                cursor: pointer;
+
+                &:hover {
+                    background: #f1f5f9;
+                    border-color: #cbd5e1;
+                }
+
+                &.google i { color: #db4437; }
+                &.facebook i { color: #1877f2; }
+            }
+        }
+
+        /* --- Divider --- */
+        .divider {
+            margin: 25px 0;
+            text-align: center;
+            position: relative;
+            
+            &::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 0;
+                width: 100%;
+                height: 1px;
+                background: $border-color;
+            }
+            span {
+                background: #fff;
+                padding: 0 15px;
+                color: $text-muted;
+                font-size: 0.85rem;
+                position: relative;
+                z-index: 1;
+            }
+        }
+
+        /* --- Form Inputs --- */
+        .login-form {
+            .form-label {
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: $text-main;
+                margin-bottom: 6px;
+                display: block;
+            }
+
+            .custom-input {
+                width: 100%;
+                padding: 10px 15px;
+                font-size: 0.95rem;
+                border: 1px solid $border-color;
+                border-radius: 8px;
+                transition: all 0.2s;
+                outline: none;
+                background-color: #fff;
+
+                &:focus {
+                    border-color: $primary-color;
+                    box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
+                }
+
+                &::placeholder {
+                    color: #cbd5e1;
+                }
+            }
+
+            /* Password Eye Icon */
+            .input-wrapper {
+                position: relative;
+                .eye-icon {
+                    position: absolute;
+                    right: 15px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: $text-muted;
+                    cursor: pointer;
+                    &:hover { color: $primary-color; }
+                }
+            }
+            
+            /* Options (Remember me & Forgot pass) */
+            .options-group {
+                font-size: 0.9rem;
+                
+                .form-check-input {
+                    cursor: pointer;
+                    &:checked {
+                        background-color: $primary-color;
+                        border-color: $primary-color;
+                    }
+                }
+                
+                .forgot-link {
+                    color: $primary-color;
+                    text-decoration: none;
+                    font-weight: 500;
+                    &:hover { text-decoration: underline; }
+                }
+            }
+
+            /* Submit Button */
+            .btn-login-submit {
+                width: 100%;
+                padding: 12px;
+                background: linear-gradient(135deg, $primary-color, $primary-hover);
+                color: #fff;
+                font-weight: 600;
+                font-size: 1rem;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: transform 0.2s, box-shadow 0.2s;
+
+                &:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+                }
+
+                &:active {
+                    transform: translateY(0);
+                }
+            }
+        }
+
+        /* --- Footer Link --- */
+        .login-footer {
+            font-size: 0.95rem;
+            color: $text-muted;
+
+            .register-link {
+                color: $primary-color;
+                font-weight: 600;
+                text-decoration: none;
+                margin-left: 5px;
+                &:hover { text-decoration: underline; }
+            }
+        }
+    }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .login-page {
+        padding: 15px;
+        .login-card {
+            padding: 25px;
+        }
+    }
+}

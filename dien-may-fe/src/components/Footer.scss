@@ -1,0 +1,127 @@
+// Variables
+$primary-color: #2563eb;
+$text-main: #333;
+$text-light: #666;
+$bg-footer: #fff;
+$bg-bottom: #f3f4f6;
+$border-color: #eee;
+
+.main-footer {
+    background-color: $bg-footer;
+    border-top: 4px solid $border-color; // Viền trên ngăn cách body
+    padding-top: 40px;
+    font-size: 14px;
+    color: $text-main;
+
+    /* --- Heading --- */
+    .footer-heading {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: $text-main;
+    }
+
+    /* --- Lists --- */
+    .footer-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+            margin-bottom: 10px;
+            color: $text-light;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+
+            span {
+                margin-right: 5px;
+            }
+
+            a {
+                text-decoration: none;
+                color: $text-light;
+                transition: color 0.2s;
+
+                &:hover {
+                    color: $primary-color;
+                }
+
+                &.hotline {
+                    font-weight: 700;
+                    color: $text-main;
+                    
+                    &:hover { color: $primary-color; }
+                }
+            }
+        }
+
+        &.small-text li a {
+            font-size: 13px;
+        }
+    }
+
+    /* --- Payment Icons --- */
+    .payment-icons {
+        display: flex;
+        gap: 10px;
+        font-size: 1.8rem;
+        color: #555;
+
+        i {
+            transition: color 0.2s;
+            &:hover { color: $primary-color; }
+        }
+    }
+
+    /* --- Social Links --- */
+    .social-links {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: transform 0.2s;
+
+            &:hover { transform: scale(1.1); }
+
+            &.fb { color: #1877f2; font-size: 1.8rem; }
+            &.yt { color: #ff0000; font-size: 1.8rem; }
+            &.zl { 
+                background: #0068ff; 
+                color: #fff; 
+                font-weight: bold; 
+                padding: 2px 8px; 
+                border-radius: 4px; 
+                font-size: 12px;
+            }
+        }
+    }
+
+    /* --- Footer Bottom (Copyright) --- */
+    .footer-bottom {
+        background-color: $bg-bottom;
+        padding: 20px 0;
+        margin-top: 30px;
+        border-top: 1px solid #e5e7eb;
+
+        p {
+            line-height: 1.5;
+        }
+    }
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .main-footer {
+        padding-top: 20px;
+        
+        .footer-heading {
+            margin-top: 15px; // Tăng khoảng cách giữa các khối khi xuống dòng
+        }
+    }
+}

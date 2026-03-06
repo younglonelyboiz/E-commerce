@@ -1,0 +1,96 @@
+.product-detail-page {
+    background-color: #f3f4f6;
+    padding-bottom: 50px;
+
+    .main-content {
+        border-radius: 12px;
+        background-color: #fff;
+    }
+
+    .gallery-container {
+        display: flex;
+        flex-direction: column; // Ép ảnh nhỏ xuống dưới ảnh to
+
+        .main-image {
+            width: 100%;       // Chiếm hết chiều rộng cột 5
+            height: 450px;     // Tăng chiều cao để ảnh to ra
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #fff;
+
+            img {
+                width: 100%;   // Ảnh chiếm hết khung
+                height: 100%;
+                object-fit: contain; // Đảm bảo không bị méo ảnh
+                transition: transform 0.3s ease;
+                
+                &:hover {
+                    transform: scale(1.05);
+                }
+            }
+        }
+
+        .thumb-list {
+            display: flex;
+            flex-direction: row; // Đảm bảo ảnh nhỏ nằm ngang
+            gap: 10px;
+            margin-top: 15px;    // Tạo khoảng cách với ảnh to phía trên
+            overflow-x: auto;    // Cho phép cuộn ngang nếu nhiều ảnh
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+
+            .thumb-item {
+                flex: 0 0 80px;  // Giữ kích thước cố định, không bị bóp méo
+                height: 80px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                cursor: pointer;
+                background-color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 5px;
+
+                img {
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                }
+
+                &.active {
+                    border-color: #288ad6;
+                    border-width: 2px;
+                    box-shadow: 0 2px 8px rgba(40, 138, 214, 0.2);
+                }
+
+                &:hover {
+                    border-color: #288ad6;
+                }
+            }
+        }
+    }
+
+    // Các phần text bên phải
+    .prod-name-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .price-section {
+        background: #fff5f5;
+        border: 1px solid #ffebeb;
+        padding: 20px;
+        border-radius: 8px;
+        
+        .discount-price {
+            font-size: 30px;
+            color: #d0021c;
+            font-weight: bold;
+        }
+    }
+}

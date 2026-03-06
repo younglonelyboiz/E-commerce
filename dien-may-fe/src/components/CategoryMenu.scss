@@ -1,0 +1,74 @@
+// Variables - Tinh chỉnh lại màu sắc cho hiện đại hơn
+$menu-width: 240px;
+$primary-color: #2563eb;
+$primary-light: #eff6ff;
+$text-main: #1e293b;
+$text-muted: #64748b;
+$bg-white: #ffffff;
+$border-color: #e2e8f0;
+$transition-speed: 0.2s;
+
+.category-menu-container {
+  width: $menu-width;
+  background: $bg-white;
+  border: 1px solid $border-color;
+  border-radius: 12px; // Bo góc mềm mại hơn
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow: hidden; // Đảm bảo background hover không tràn khỏi border-radius
+
+  .parent-list {
+    list-style: none;
+    padding: 8px; // Tạo khoảng trống bao quanh các item
+    margin: 0;
+
+    .parent-item {
+      border-radius: 8px; // Bo góc cho từng dòng khi hover
+      transition: all $transition-speed ease;
+      margin-bottom: 2px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      &:hover {
+        background-color: $primary-light;
+
+        .parent-link {
+          color: $primary-color;
+          transform: translateX(4px); // Hiệu ứng dịch chuyển nhẹ khi hover
+        }
+      }
+
+      .parent-content {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+
+        .parent-link {
+          text-decoration: none;
+          color: $text-main;
+          font-size: 0.95rem;
+          font-weight: 500;
+          display: block;
+          width: 100%;
+          transition: all $transition-speed ease;
+        }
+      }
+    }
+  }
+}
+
+// States (Loading, Empty, Error)
+.category-menu-loading, 
+.category-menu-error, 
+.category-menu-empty {
+  width: $menu-width;
+  padding: 30px 20px;
+  text-align: center;
+  color: $text-muted;
+  background: $bg-white;
+  border: 1px solid $border-color;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}

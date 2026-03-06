@@ -1,0 +1,57 @@
+.category-page {
+    .hot-section {
+        border: 2px solid #ffebeb;
+        .title-hot {
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+    }
+
+    .filter-wrapper {
+        border: 1px solid #e5e7eb;
+        
+        .filter-group {
+            label {
+                color: #555;
+                letter-spacing: 0.5px;
+            }
+        }
+
+        .brand-list {
+            scrollbar-width: thin;
+            &::-webkit-scrollbar { width: 4px; }
+            &::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+        }
+    }
+
+    main {
+        .card-product-wrapper {
+            transition: transform 0.3s ease;
+            &:hover {
+                transform: translateY(-5px);
+            }
+        }
+    }
+
+    @media (max-width: 768px) {
+        aside {
+            display: none; // Ẩn sidebar trên mobile, có thể làm nút filter popup sau
+        }
+    }
+}
+/* Trong CategoryPage.scss */
+.category-page {
+    .filter-wrapper {
+        // ... các style cũ của bạn
+        
+        &.sticky-top {
+            /* Navbar dính ở top -30px, nên bộ lọc phải đẩy xuống để không chạm Navbar */
+            top: 90px !important; 
+            z-index: 10; /* Thấp hơn z-index 1000 của .main-header */
+            height: fit-content;
+            max-height: calc(100vh - 110px); /* Đảm bảo bộ lọc không dài quá màn hình */
+            overflow-y: auto;
+        }
+    }
+}

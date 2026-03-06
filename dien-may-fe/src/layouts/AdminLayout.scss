@@ -1,0 +1,71 @@
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f4f7fe;
+
+    // Sidebar
+    .admin-sidebar {
+        width: 260px;
+        background-color: #0d47a1;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        height: 100vh;
+        z-index: 1001;
+
+        .sidebar-brand {
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+            flex-grow: 1;
+
+            .nav-item {
+                display: block;
+                padding: 12px 25px;
+                color: rgba(255,255,255,0.7);
+                text-decoration: none;
+                transition: 0.3s;
+
+                &:hover, &.active {
+                    color: white;
+                    background-color: rgba(255,255,255,0.1);
+                    border-left: 4px solid #4a92ff;
+                }
+            }
+        }
+        
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+    }
+
+    // Main Content Area
+    .admin-main {
+        flex-grow: 1;
+        margin-left: 260px; // Đẩy ra để không bị Sidebar đè
+        display: flex;
+        flex-direction: column;
+
+        .admin-topbar {
+            height: 70px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .admin-content {
+            flex-grow: 1;
+        }
+    }
+}
