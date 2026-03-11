@@ -41,45 +41,63 @@ export default function initModels(sequelize) {
   const user_roles = _user_roles.init(sequelize, DataTypes);
   const users = _users.init(sequelize, DataTypes);
 
-  // THIẾT LẬP QUAN HỆ (ASSOCIATIONS)
-  roles.belongsToMany(users, {
-    as: "user_id_users",
-    through: user_roles,
-    foreignKey: "role_id",
-    otherKey: "user_id",
-  });
+  // --- THIẾT LẬP QUAN HỆ (ASSOCIATIONS) ---
+
+  // 1. PHÂN QUYỀN: USERS <-> ROLES (Many-to-Many)
   users.belongsToMany(roles, {
-    as: "role_id_roles",
+    as: "roles",
     through: user_roles,
     foreignKey: "user_id",
     otherKey: "role_id",
   });
+  roles.belongsToMany(users, {
+    as: "users",
+    through: user_roles,
+    foreignKey: "role_id",
+    otherKey: "user_id",
+  });
+
+  // 2. PHÂN QUYỀN: ROLES <-> PERMISSIONS (Many-to-Many)
+  // Sửa lỗi: Xóa bỏ belongsTo ngược gây lỗi FK #1452
+  roles.belongsToMany(permissions, {
+    as: "permissions",
+    through: role_permissions,
+    foreignKey: "role_id",
+    otherKey: "permission_id",
+  });
+  permissions.belongsToMany(roles, {
+    as: "roles",
+    through: role_permissions,
+    foreignKey: "permission_id",
+    otherKey: "role_id",
+  });
+
+  // 3. QUAN HỆ BẢNG TRUNG GIAN (Để query chi tiết nếu cần)
+  user_roles.belongsTo(users, { as: "user", foreignKey: "user_id" });
+  users.hasMany(user_roles, { as: "user_roles", foreignKey: "user_id" });
+  user_roles.belongsTo(roles, { as: "role", foreignKey: "role_id" });
+  roles.hasMany(user_roles, { as: "user_roles", foreignKey: "role_id" });
+
+  role_permissions.belongsTo(roles, { as: "role", foreignKey: "role_id" });
+  roles.hasMany(role_permissions, {
+    as: "role_permissions",
+    foreignKey: "role_id",
+  });
+  role_permissions.belongsTo(permissions, {
+    as: "permission",
+    foreignKey: "permission_id",
+  });
+  permissions.hasMany(role_permissions, {
+    as: "role_permissions",
+    foreignKey: "permission_id",
+  });
+
+  // 4. SẢN PHẨM & THƯƠNG HIỆU & DANH MỤC
   products.belongsTo(brands, { as: "brand", foreignKey: "brand_id" });
   brands.hasMany(products, { as: "products", foreignKey: "brand_id" });
-  cart_products.belongsTo(carts, { as: "cart", foreignKey: "cart_id" });
-  carts.hasMany(cart_products, { as: "cart_products", foreignKey: "cart_id" });
   products.belongsTo(categories, { as: "category", foreignKey: "category_id" });
   categories.hasMany(products, { as: "products", foreignKey: "category_id" });
-  cc_transactions.belongsTo(orders, { as: "order", foreignKey: "order_id" });
-  orders.hasMany(cc_transactions, {
-    as: "cc_transactions",
-    foreignKey: "order_id",
-  });
-  order_products.belongsTo(orders, { as: "order", foreignKey: "order_id" });
-  orders.hasMany(order_products, {
-    as: "order_products",
-    foreignKey: "order_id",
-  });
-  reviews.belongsTo(orders, { as: "order", foreignKey: "order_id" });
-  orders.hasMany(reviews, { as: "reviews", foreignKey: "order_id" });
-  order_products.belongsTo(products, {
-    as: "product",
-    foreignKey: "product_id",
-  });
-  products.hasMany(order_products, {
-    as: "order_products",
-    foreignKey: "product_id",
-  });
+
   product_images.belongsTo(products, {
     as: "product",
     foreignKey: "product_id",
@@ -88,26 +106,51 @@ export default function initModels(sequelize) {
     as: "product_images",
     foreignKey: "product_id",
   });
-  reviews.belongsTo(products, { as: "product", foreignKey: "product_id" });
-  products.hasMany(reviews, { as: "reviews", foreignKey: "product_id" });
-  roles.belongsTo(role_permissions, {
-    as: "id_role_permission",
-    foreignKey: "id",
+
+  // 5. GIỎ HÀNG
+  cart_products.belongsTo(carts, { as: "cart", foreignKey: "cart_id" });
+  carts.hasMany(cart_products, { as: "cart_products", foreignKey: "cart_id" });
+
+  // 6. ĐƠN HÀNG & GIAO DỊCH
+  cc_transactions.belongsTo(orders, { as: "order", foreignKey: "order_id" });
+  orders.hasMany(cc_transactions, {
+    as: "cc_transactions",
+    foreignKey: "order_id",
   });
-  role_permissions.hasOne(roles, { as: "role", foreignKey: "id" });
-  user_roles.belongsTo(roles, { as: "role", foreignKey: "role_id" });
-  roles.hasMany(user_roles, { as: "user_roles", foreignKey: "role_id" });
+
+  order_products.belongsTo(orders, { as: "order", foreignKey: "order_id" });
+  orders.hasMany(order_products, {
+    as: "order_products",
+    foreignKey: "order_id",
+  });
+
+  order_products.belongsTo(products, {
+    as: "product",
+    foreignKey: "product_id",
+  });
+  products.hasMany(order_products, {
+    as: "order_products",
+    foreignKey: "product_id",
+  });
+
   orders.belongsTo(users, { as: "user", foreignKey: "user_id" });
   users.hasMany(orders, { as: "orders", foreignKey: "user_id" });
+
+  // 7. ĐÁNH GIÁ & ĐỊA CHỈ
+  reviews.belongsTo(orders, { as: "order", foreignKey: "order_id" });
+  orders.hasMany(reviews, { as: "reviews", foreignKey: "order_id" });
+
+  reviews.belongsTo(products, { as: "product", foreignKey: "product_id" });
+  products.hasMany(reviews, { as: "reviews", foreignKey: "product_id" });
+
   reviews.belongsTo(users, { as: "user", foreignKey: "user_id" });
   users.hasMany(reviews, { as: "reviews", foreignKey: "user_id" });
+
   user_addresses.belongsTo(users, { as: "user", foreignKey: "user_id" });
   users.hasMany(user_addresses, {
     as: "user_addresses",
     foreignKey: "user_id",
   });
-  user_roles.belongsTo(users, { as: "user", foreignKey: "user_id" });
-  users.hasMany(user_roles, { as: "user_roles", foreignKey: "user_id" });
 
   return {
     brands,

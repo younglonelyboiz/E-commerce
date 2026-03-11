@@ -15,10 +15,20 @@ const createJWT = (payload) => {
 };
 
 // Middleware kiểm tra xem người dùng đã đăng nhập chưa
+// src/middleware/JWTAction.js
 const checkUserJWT = (req, res, next) => {
-  // 1. Lấy token từ header "Authorization: Bearer <token>"
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  // 1. Lấy token từ Cookie (Ưu tiên)
+  let token = req.cookies?.access_token;
+
+  // 2. Nếu không có cookie, lấy từ Header Authorization
+  if (!token && req.headers.authorization) {
+    const parts = req.headers.authorization.split(" ");
+    if (parts.length === 2 && parts[0] === "Bearer") {
+      token = parts[1]; // Lấy đúng chuỗi Token
+    } else {
+      token = parts[0]; // Đề phòng trường hợp gửi token trực tiếp không có chữ Bearer
+    }
+  }
 
   if (!token) {
     return res.status(401).json({
@@ -29,11 +39,11 @@ const checkUserJWT = (req, res, next) => {
   }
 
   try {
-    // 2. Xác thực token
-    let decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Lưu thông tin user vào request để các hàm sau sử dụng
-    next(); // Cho phép đi tiếp sang Controller
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
   } catch (err) {
+    console.log(">>> JWT Verify Error:", err.message);
     return res.status(401).json({
       EC: -1,
       EM: "Phiên đăng nhập đã hết hạn hoặc không hợp lệ!",
@@ -42,4 +52,31 @@ const checkUserJWT = (req, res, next) => {
   }
 };
 
-export { createJWT, checkUserJWT };
+const checkAdminRole = (req, res, next) => {
+  // req.user đã được nạp từ middleware checkUserJWT trước đó
+  console.log(">>> Check Admin Role cho User:", req.user);
+  console.log(">>> Roles hiện tại:", req.user);
+  if (req.user && req.user.roles) {
+    // Chuyển tất cả role trong mảng sang chữ Hoa để so sánh cho chắc
+    const isAdmin = req.user.roles.some(
+      (role) => role.toUpperCase() === "ADMIN",
+    );
+
+    if (isAdmin) {
+      next(); // Là Admin thì cho đi tiếp
+    } else {
+      return res.status(403).json({
+        EC: -1,
+        EM: "Bạn không có quyền truy cập vào tài nguyên này!",
+        DT: "",
+      });
+    }
+  } else {
+    return res.status(403).json({
+      EC: -1,
+      EM: "Không tìm thấy thông tin phân quyền!",
+      DT: "",
+    });
+  }
+};
+export { createJWT, checkUserJWT, checkAdminRole };

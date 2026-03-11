@@ -1,27 +1,45 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Header.scss";
 import CategoryMenu from "./CategoryMenu.jsx";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react"; // Thêm useContext
 import { getCategories } from "../services/categoryService.js";
+import { UserContext } from "../context/UserContext.jsx"; // Import Context
+import { logoutUser } from "../services/userService.js"; // Import hàm logout API
+import { toast } from "react-toastify";
 
 function Header() {
     const [categories, setCategories] = useState([]);
+    const { user, logoutContext } = useContext(UserContext); // Lấy data từ kho chung
+    const navigate = useNavigate();
 
-    // 2. Gọi API ở đây (chỉ chạy 1 lần khi Header mount)
     useEffect(() => {
         const fetchCategories = async () => {
             try {
                 const res = await getCategories();
-                // Giả sử res.DT là mảng danh mục
                 setCategories(res.DT || []);
             } catch (err) {
                 console.error("Lỗi header fetch:", err);
-
             }
         };
-
         fetchCategories();
     }, []);
+
+    const handleLogout = async () => {
+        try {
+            let res = await logoutUser(); // Gọi API xóa cookie ở Backend
+            if (res && +res.EC === 0) {
+                logoutContext(); // Xóa data trong Context ở Frontend
+                toast.success("Đăng xuất thành công!");
+                navigate("/login");
+            } else {
+                toast.error(res.EM || "Lỗi khi đăng xuất");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Lỗi kết nối server!");
+        }
+    };
+
     return (
         <header className="main-header">
             {/* Top bar */}
@@ -34,25 +52,15 @@ function Header() {
             {/* Main navbar */}
             <nav className="navbar navbar-expand-lg sticky-top py-2">
                 <div className="container px-0">
-                    {/* Logo */}
-                    <Link className="navbar-brand" to="/">
-                        Điện Máy HĐ
-                    </Link>
+                    <Link className="navbar-brand" to="/">Điện Máy HĐ</Link>
 
                     <div className="category-wrapper">
-                        {/* Lưu ý: Button chứa div là không hợp lệ HTML, nhưng tạm thời giữ logic của bạn */}
                         <div className="btn category-btn">
                             <i className="bi bi-grid-fill me-2"></i>
                             Danh mục
-
-                            {/* 3. Truyền dữ liệu xuống CategoryMenu */}
-                            <CategoryMenu
-                                data={categories}
-                            />
+                            <CategoryMenu data={categories} />
                         </div>
                     </div>
-
-
 
                     {/* Search */}
                     <div className="flex-grow-1 mx-3">
@@ -70,7 +78,7 @@ function Header() {
 
                     {/* Utilities */}
                     <div className="d-flex align-items-center">
-                        <Link to="/cart" className="position-relative me-3 text-center">
+                        <Link to="/cart" className="position-relative me-3 text-center text-decoration-none text-dark">
                             <i className="bi bi-cart3 fs-4"></i>
                             <span className="badge bg-warning text-dark position-absolute top-0 start-100 translate-middle">
                                 0
@@ -78,23 +86,58 @@ function Header() {
                             <div className="small">Giỏ hàng</div>
                         </Link>
 
-                        {/* Sửa nút Đăng nhập ở đây */}
-                        <div className="auth-buttons">
-                            <Link to="/login" className="btn btn-outline-custom me-2">
-                                Đăng nhập
-                            </Link>
-                            <Link to="/register" className="btn btn-outline-custom me-2 register-btn">
-                                Đăng ký
-                            </Link>
+                        {/* Logic hiển thị Auth */}
+                        <div className="auth-section">
+                            {user && user.auth === true ? (
+                                <div className="dropdown">
+                                    <button
+                                        className="btn btn-outline-custom dropdown-toggle border-0 d-flex align-items-center"
+                                        type="button"
+                                        id="userMenu"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                    >
+                                        <i className="bi bi-person-circle me-2 fs-5"></i>
+                                        <span className="me-1">Xin chào,</span>
+                                        <strong className="text-primary">{user.userName} </strong>
+                                    </button>
+
+                                    <ul className="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userMenu">
+                                        <li>
+                                            <Link className="dropdown-item py-2" to="/profile">
+                                                <i className="bi bi-person me-2"></i>Thông tin cá nhân
+                                            </Link>
+                                        </li>
+                                        {user.roles && user.roles.includes("ADMIN") && (
+                                            <li>
+                                                <Link className="dropdown-item py-2 text-primary" to="/admin">
+                                                    <i className="bi bi-shield-lock me-2"></i>Quản trị Admin
+                                                </Link>
+                                            </li>
+                                        )}
+                                        <li><hr className="dropdown-divider" /></li>
+                                        <li>
+                                            <button className="dropdown-item py-2 text-danger" onClick={handleLogout}>
+                                                <i className="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            ) : (
+                                <div className="auth-buttons">
+                                    <Link to="/login" className="btn btn-outline-custom me-2">
+                                        Đăng nhập
+                                    </Link>
+                                    <Link to="/register" className="btn btn-outline-custom register-btn">
+                                        Đăng ký
+                                    </Link>
+                                </div>
+                            )}
                         </div>
                     </div>
-
-
                 </div>
             </nav>
-
-
-        </header >
+        </header>
     );
 }
 

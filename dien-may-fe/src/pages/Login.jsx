@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import './Login.scss';
+import { loginApi } from '../services/userService';
+import { toast } from 'react-toastify';
+import { UserContext } from '../context/UserContext';
 
 const Login = () => {
+    const navigate = useNavigate();
+    const { loginContext } = useContext(UserContext);
+
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -14,29 +20,55 @@ const Login = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Đăng nhập:", formData);
-        // Logic gọi API login tại đây
+
+        const { email, password } = formData;
+
+        if (!email || !password) {
+            toast.error("Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+
+        try {
+            let res = await loginApi(email, password);
+            console.log(res);
+            if (res && +res.EC === 0) {
+                // TRẠM DỪNG 3: Nhận res.DT (chứa userName từ DB) và đẩy vào kho
+                loginContext(res.DT);
+
+                toast.success("Đăng nhập thành công!");
+
+                // Chuyển hướng dựa trên Role
+                if (res.DT.roles && res.DT.roles.includes("ADMIN")) {
+                    navigate("/admin");
+                } else {
+                    navigate("/");
+                }
+            } else {
+                // Sửa lỗi: Chỉ hiện lỗi khi EC khác 0
+                toast.error(res.EM || "Đăng nhập thất bại!");
+            }
+        } catch (error) {
+            console.error(">>> Login Error:", error);
+            toast.error("Lỗi kết nối server!");
+        }
     };
 
     return (
         <div className="login-page">
             <div className="login-card">
-
-                {/* Header */}
                 <div className="text-center mb-4">
                     <h3 className="login-title">Đăng nhập</h3>
                     <p className="text-muted">Chào mừng bạn quay trở lại!</p>
                 </div>
 
-                {/* Social Login */}
                 <div className="social-group">
-                    <button className="btn-social google">
+                    <button className="btn-social google" type="button">
                         <i className="bi bi-google"></i>
                         <span>Google</span>
                     </button>
-                    <button className="btn-social facebook">
+                    <button className="btn-social facebook" type="button">
                         <i className="bi bi-facebook"></i>
                         <span>Facebook</span>
                     </button>
@@ -46,10 +78,7 @@ const Login = () => {
                     <span>Hoặc đăng nhập bằng email</span>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="login-form">
-
-                    {/* Email */}
                     <div className="mb-3">
                         <label className="form-label">Email</label>
                         <input
@@ -63,11 +92,8 @@ const Login = () => {
                         />
                     </div>
 
-                    {/* Mật khẩu */}
                     <div className="mb-3">
-                        <label className="form-label d-flex justify-content-between">
-                            Mật khẩu
-                        </label>
+                        <label className="form-label">Mật khẩu</label>
                         <div className="input-wrapper">
                             <input
                                 type={showPass ? "text" : "password"}
@@ -84,18 +110,15 @@ const Login = () => {
                         </div>
                     </div>
 
-                    {/* Quên mật khẩu & Ghi nhớ */}
                     <div className="d-flex justify-content-between align-items-center mb-4 options-group">
-                        <Link to="/forgot-password" class="forgot-link">Quên mật khẩu?</Link>
+                        <Link to="/forgot-password" title="Quên mật khẩu?" className="forgot-link">Quên mật khẩu?</Link>
                     </div>
 
-                    {/* Button Submit */}
                     <button type="submit" className="btn-login-submit">
                         Đăng nhập
                     </button>
                 </form>
 
-                {/* Footer Link chuyển sang Đăng Ký */}
                 <div className="login-footer mt-4 text-center">
                     Bạn chưa có tài khoản? <Link to="/register" className="register-link">Đăng ký ngay</Link>
                 </div>

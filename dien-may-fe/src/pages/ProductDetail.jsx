@@ -154,7 +154,7 @@ const ProductDetail = () => {
                         <h4 className="title-border mb-4 fw-bold">Thông số kỹ thuật</h4>
                         <table className="table table-hover mb-0">
                             <tbody>
-                                {Object.entries(specs).map(([key, value], idx) => (
+                                {Object.entries(specs || {}).map(([key, value], idx) => (
                                     <tr key={idx}>
                                         <td className="fw-bold bg-light text-secondary" style={{ width: '35%' }}>{key}</td>
                                         <td>{value}</td>

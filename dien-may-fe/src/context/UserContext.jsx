@@ -1,0 +1,52 @@
+import React, { createContext, useState, useEffect } from "react";
+import { getUserAccount } from "../services/userService";
+
+export const UserContext = createContext();
+
+export const UserProvider = ({ children }) => {
+    const [user, setUser] = useState({
+        email: "",
+        userName: "",
+        roles: [],
+        auth: false,
+        isLoading: true // Mặc định là true khi bắt đầu load app
+    });
+
+    const loginContext = (userData) => {
+        setUser({
+            email: userData?.email,
+            userName: userData?.userName,
+            roles: userData?.roles || [],
+            auth: true,
+            isLoading: false
+        });
+    };
+
+    const logoutContext = () => {
+        setUser({ email: "", userName: "", roles: [], auth: false, isLoading: false });
+    };
+
+    // Hàm nạp lại dữ liệu từ phiên đăng nhập cũ (khi F5)
+    const fetchUser = async () => {
+        try {
+            let res = await getUserAccount();
+            if (res && res.EC === 0) {
+                loginContext(res.DT);
+            } else {
+                setUser(prev => ({ ...prev, isLoading: false }));
+            }
+        } catch (error) {
+            setUser(prev => ({ ...prev, isLoading: false }));
+        }
+    };
+
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
+    return (
+        <UserContext.Provider value={{ user, loginContext, logoutContext }}>
+            {children}
+        </UserContext.Provider>
+    );
+};

@@ -1,5 +1,6 @@
 import { sendResponse } from "../utils/apiResponse.js";
 import { createUser } from "../services/userService.js";
+import { loginUser } from "../services/authService.js";
 
 const checkValidUserData = (data) => {
   if (
@@ -46,4 +47,53 @@ export const registerNewUser = async (req, res) => {
     console.error("Error creating user:", error);
     return sendResponse(res, -1, "Error creating user", null);
   }
+};
+
+export const handleLogin = async (req, res) => {
+  try {
+    let data = await loginUser(req.body);
+
+    if (data && +data.EC === 0) {
+      // 1. Đóng gói Cookie
+      res.cookie("access_token", data.DT.access_token, {
+        httpOnly: true,
+        secure: false, // Tạm thời để false để test chắc chắn trên localhost
+        maxAge: 3600 * 1000,
+        path: "/",
+        sameSite: "lax",
+      });
+
+      // 2. Xóa access_token khỏi dữ liệu trả về để bảo mật tuyệt đối
+      // Client (React) chỉ cần thông tin User để hiển thị giao diện
+      delete data.DT.access_token;
+    }
+
+    return sendResponse(res, data.EC, data.EM, data.DT);
+  } catch (error) {
+    console.log(error);
+    return sendResponse(res, -1, "Internal Server Error", null);
+  }
+};
+
+export const getUserAccount = async (req, res) => {
+  // Middleware checkUserJWT đã giải mã token và lưu vào req.user
+  return res.status(200).json({
+    EC: 0,
+    EM: "Lấy thông tin tài khoản thành công!",
+    DT: {
+      id: req.user.id,
+      email: req.user.email,
+      userName: req.user.userName,
+      roles: req.user.roles,
+    },
+  });
+};
+
+export const handleLogout = (req, res) => {
+  res.clearCookie("access_token");
+  return res.status(200).json({
+    EC: 0,
+    EM: "Đăng xuất thành công!",
+    DT: "",
+  });
 };

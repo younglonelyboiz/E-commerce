@@ -10,6 +10,7 @@ import AdminLayout from "../layouts/AdminLayout"; // Bạn cần tạo layout n�
 import AdminProduct from "../pages/AdminProduct";
 // import AdminDashboard from "../pages/AdminDashboard";
 import App from "../App";
+import AdminRoute from "../routes/AdminRoute";
 
 export const router = createBrowserRouter([
     // NHÁNH CLIENT (Người dùng mua hàng)
@@ -28,17 +29,18 @@ export const router = createBrowserRouter([
     // NHÁNH ADMIN (Quản lý hệ thống)
     {
         path: "/admin",
-        element: <AdminLayout />, // Layout riêng có Sidebar cho Admin
+        // BỌC ADMIN LAYOUT Ở ĐÂY
+        element: (
+            <AdminRoute>
+                <AdminLayout />
+            </AdminRoute>
+        ),
         children: [
-            // {
-            //     index: true, // Đường dẫn /admin
-            //     element: <AdminDashboard />,
-            // },
             {
-                path: "products", // Đường dẫn /admin/products
+                path: "products",
                 element: <AdminProduct />,
             },
-            // Bạn có thể thêm các trang đơn hàng, khách hàng ở đây
+            // Thêm các con của admin vào đây thoải mái
         ]
     }
 ]);

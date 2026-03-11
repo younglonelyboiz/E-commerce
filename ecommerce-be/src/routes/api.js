@@ -1,5 +1,5 @@
 import express from "express";
-import { checkUserJWT } from "../middlewares/JWTAction.js";
+import { checkUserJWT, checkAdminRole } from "../middlewares/JWTAction.js";
 
 // Đảm bảo tên hàm ở đây khớp chính xác với 'export const ...' ở Controller
 import {
@@ -15,25 +15,50 @@ import {
 
 import { getAllBrands } from "../controllers/brandController.js";
 import { getAllCategories } from "../controllers/categoriesController.js";
-import { registerNewUser } from "../controllers/userController.js";
+import {
+  registerNewUser,
+  handleLogin,
+  getUserAccount,
+  handleLogout,
+} from "../controllers/userController.js";
 
 const initApiRoutes = (app) => {
   const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
 
-  router.get("/admin/products", readProductsForAdmin);
+  router.get(
+    "/admin/products",
+    checkUserJWT,
+    checkAdminRole,
+    readProductsForAdmin,
+  );
+  router.post("/create-product", checkUserJWT, checkAdminRole, createProduct);
+  router.delete(
+    "/delete-product/:id",
+    checkUserJWT,
+    checkAdminRole,
+    deleteProductbyID,
+  );
+  router.put(
+    "/update-product/:id",
+    checkUserJWT,
+    checkAdminRole,
+    updateProductbyID,
+  ); // --- Routes cho trang chủ (Điện Máy Xanh style) ---
 
   router.get("/products", readProducts);
   router.get("/products/:id", getProductDetail);
-  router.post("/create-product", createProduct);
-  router.delete("/delete-product/:id", deleteProductbyID);
-  router.put("/update-product/:id", updateProductbyID); // --- Routes cho trang chủ (Điện Máy Xanh style) ---
 
   router.get("/top-sale", getSaleList);
   router.get("/top-selling", getSalingList); // --- Các routes khác ---
 
   router.get("/brands", getAllBrands);
   router.get("/categories", getAllCategories);
+
+  // Route này yêu cầu phải có Cookie hợp lệ mới vào được
+  router.get("/account", checkUserJWT, getUserAccount);
+  router.post("/login", handleLogin);
   router.post("/register-user", registerNewUser); // Route kiểm tra JWT
+  router.post("/logout", checkUserJWT, handleLogout);
 
   router.get("/user/profile", checkUserJWT, (req, res) => {
     return res.status(200).json({

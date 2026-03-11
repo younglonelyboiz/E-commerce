@@ -30,8 +30,8 @@ export const createUser = async (userData) => {
     const hashedPassword = await brcypt.hash(userData.password, salt);
     const data = {
       email: userData.email,
-      passwordHash: hashedPassword,
-      userName: userData.user_name,
+      password_hash: hashedPassword,
+      user_name: userData.user_name,
     };
     const user = await db.users.create({
       ...data,

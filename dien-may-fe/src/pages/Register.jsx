@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Register.scss';
 import { registerNewUser } from '../services/userService.js';
 
@@ -18,6 +18,8 @@ const Register = () => {
     // State ẩn/hiện mật khẩu
     const [showPass, setShowPass] = useState(false);
     const [showConfirmPass, setShowConfirmPass] = useState(false);
+
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -48,6 +50,17 @@ const Register = () => {
         let res = await registerNewUser(registerData);
         if (res && res.EC === 0) {
             toast.success(res.EM);
+            // Reset form
+            setFormData({
+                userName: '',
+                dob: '',
+                phone: '',
+                email: '',
+                password: '',
+                confirmPassword: '',
+            });
+            // Chuyển đến trang đăng nhập
+            navigate('/login');
         } else {
             toast.error(res.EM || 'Đăng ký thất bại');
         }
@@ -193,3 +206,4 @@ const Register = () => {
 };
 
 export default Register;
+
