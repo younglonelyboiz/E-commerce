@@ -10,6 +10,7 @@ import {
   getSaleList, // Tên hàm xử lý logic top-sale ở Controller
   getSalingList,
   readProductsForAdmin, // Tên hàm xử lý logic top-selling ở Controller
+  getProductDetail, // Thêm mới: Lấy chi tiết sản phẩm theo ID
 } from "../controllers/productController.js";
 
 import { getAllBrands } from "../controllers/brandController.js";
@@ -22,7 +23,7 @@ const initApiRoutes = (app) => {
   router.get("/admin/products", readProductsForAdmin);
 
   router.get("/products", readProducts);
-  router.get("/products/:id", readProducts);
+  router.get("/products/:id", getProductDetail);
   router.post("/create-product", createProduct);
   router.delete("/delete-product/:id", deleteProductbyID);
   router.put("/update-product/:id", updateProductbyID); // --- Routes cho trang chủ (Điện Máy Xanh style) ---

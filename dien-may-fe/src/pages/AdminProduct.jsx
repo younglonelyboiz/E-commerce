@@ -19,12 +19,10 @@ const AdminProduct = () => {
     const [loading, setLoading] = useState(false);
     const [totalPages, setTotalPages] = useState(0);
 
-    // State cho Modal
     const [showModal, setShowModal] = useState(false);
     const [actionModal, setActionModal] = useState('CREATE');
     const [dataModal, setDataModal] = useState({});
 
-    // State cho Modal Delete
     const [showModalDelete, setShowModalDelete] = useState(false);
     const [dataModalDelete, setDataModalDelete] = useState({});
 
@@ -40,6 +38,7 @@ const AdminProduct = () => {
         const res = await getProductsByAdmin(filters);
         if (res && res.EC === 0) {
             setProducts(res.DT.products || []);
+            console.log(res.DT.products);
             setTotalPages(res.DT.totalPages || 0);
         }
         setLoading(false);
@@ -58,7 +57,6 @@ const AdminProduct = () => {
         setFilters(prev => ({ ...prev, [key]: value, page: (key === 'page' ? value : 1) }));
     };
 
-    // --- Logic Modal ---
     const handleCreate = () => {
         setActionModal('CREATE');
         setDataModal({});
@@ -67,24 +65,31 @@ const AdminProduct = () => {
 
     const handleEdit = async (product) => {
         setLoading(true);
-        const res = await getProductDetailById(product.id);
-        if (res && res.EC === 0) {
-            setActionModal('UPDATE');
-            setDataModal(res.DT);
-            setShowModal(true);
-        } else {
-            toast.error("Không thể lấy thông tin chi tiết sản phẩm");
+        try {
+            const res = await getProductDetailById(product.id);
+
+            // API mới trả về DT là object trực tiếp (không phải mảng products)
+            const targetProduct = res.DT;
+
+            if (targetProduct) {
+                setDataModal(targetProduct);
+                setActionModal('UPDATE');
+                setShowModal(true);
+            } else {
+                toast.error("Không tìm thấy dữ liệu chi tiết sản phẩm");
+            }
+        } catch (error) {
+            toast.error("Lỗi khi tải dữ liệu");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
-    // Hàm gọi khi nhấn nút Xóa trên bảng
     const handleDelete = (product) => {
         setDataModalDelete(product);
         setShowModalDelete(true);
     };
 
-    // --- Gọi API Xử lý ---
     const handleSubmitForm = async (productData) => {
         let res;
         if (actionModal === 'CREATE') {
@@ -97,8 +102,10 @@ const AdminProduct = () => {
             toast.success(res.EM);
             setShowModal(false);
             fetchData();
+            return res;
         } else {
-            toast.error(res.EM);
+            toast.error(res.EM || "Có lỗi xảy ra");
+            return res;
         }
     };
 
@@ -113,7 +120,6 @@ const AdminProduct = () => {
         }
     };
 
-    // --- Logic phân trang của bạn ---
     const getPagination = () => {
         const pages = [];
         const maxVisible = 5;
@@ -130,26 +136,27 @@ const AdminProduct = () => {
             <div className="admin-header d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 className="fw-bold text-dark m-0">Kho hàng hệ thống</h2>
-                    <p className="text-muted small">Quản lý thông tin, giá niêm yết và giá khuyến mãi</p>
+                    <p className="text-muted small">Quản lý giá niêm yết, phân loại và tồn kho thực tế</p>
                 </div>
                 <button className="btn btn-primary shadow-sm px-4 py-2" onClick={handleCreate}>
                     <i className="bi bi-plus-circle me-2"></i>Thêm sản phẩm
                 </button>
             </div>
 
+            {/* Filter Section */}
             <div className="filter-section bg-white p-4 rounded-3 shadow-sm mb-4">
                 <div className="row g-3">
                     <div className="col-md-4">
                         <label className="form-label small fw-bold text-muted">TÌM KIẾM</label>
                         <input
-                            type="text" className="form-control bg-light"
+                            type="text" className="form-control"
                             placeholder="Tên hoặc SKU..."
                             onChange={(e) => handleUpdateFilter('search', e.target.value)}
                         />
                     </div>
                     <div className="col-md-2">
                         <label className="form-label small fw-bold text-muted">THƯƠNG HIỆU</label>
-                        <select className="form-select bg-light" value={filters.brandId}
+                        <select className="form-select" value={filters.brandId}
                             onChange={(e) => handleUpdateFilter('brandId', e.target.value)}>
                             <option value="">Tất cả hãng</option>
                             {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -157,7 +164,7 @@ const AdminProduct = () => {
                     </div>
                     <div className="col-md-2">
                         <label className="form-label small fw-bold text-muted">DANH MỤC</label>
-                        <select className="form-select bg-light" value={filters.categoryId}
+                        <select className="form-select" value={filters.categoryId}
                             onChange={(e) => handleUpdateFilter('categoryId', e.target.value)}>
                             <option value="">Tất cả loại</option>
                             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -165,30 +172,24 @@ const AdminProduct = () => {
                     </div>
                     <div className="col-md-2">
                         <label className="form-label small fw-bold text-muted">SẮP XẾP</label>
-                        <select
-                            className="form-select bg-light"
-                            value={filters.sort}
-                            onChange={(e) => handleUpdateFilter('sort', e.target.value)}
-                        >
+                        <select className="form-select" value={filters.sort}
+                            onChange={(e) => handleUpdateFilter('sort', e.target.value)}>
                             <option value="id_desc">Mới nhất</option>
-                            <option value="id_asc">Cũ nhất</option>
-                            <option value="price_asc">Giá: Thấp đến Cao</option>
-                            <option value="price_desc">Giá: Cao đến Thấp</option>
-                            <option value="stock_asc">Tồn kho: Ít đến Nhiều</option>
-                            <option value="stock_desc">Tồn kho: Nhiều đến Ít</option>
-                            <option value="top_selling">Bán chạy nhất</option>
+                            <option value="price_asc">Giá tăng dần</option>
+                            <option value="price_desc">Giá giảm dần</option>
                         </select>
                     </div>
                 </div>
             </div>
 
+            {/* Main Table */}
             <div className="table-responsive shadow-sm rounded-3 bg-white mb-4">
                 <table className="table table-hover align-middle mb-0">
-                    <thead className="table-light">
+                    <thead>
                         <tr>
-                            <th className="ps-4 py-3">ID</th>
-                            <th>Thông tin sản phẩm</th>
-                            <th>Thương hiệu</th>
+                            <th className="ps-4" style={{ width: '80px' }}>ID</th>
+                            <th style={{ width: '30%' }}>Sản phẩm</th>
+                            <th>Phân loại</th>
                             <th>Giá gốc</th>
                             <th>Giá bán</th>
                             <th>Kho</th>
@@ -204,28 +205,46 @@ const AdminProduct = () => {
                                     <td className="ps-4 text-muted small">#{item.id}</td>
                                     <td>
                                         <div className="d-flex align-items-center">
-                                            <div className="admin-product-img-wrapper border rounded me-3 shadow-sm">
-                                                <img src={item.thumbnailUrl || 'https://via.placeholder.com/60'} alt={item.name} />
+                                            <div className="admin-product-img-wrapper me-3">
+                                                <img src={item.thumbnailUrl || 'https://via.placeholder.com/60'} alt="" />
                                             </div>
-                                            <div className="overflow-hidden">
-                                                <div className="fw-bold text-dark text-truncate" style={{ maxWidth: '250px' }}>{item.name}</div>
+                                            <div className="text-truncate">
+                                                <div className="fw-bold text-dark">{item.name}</div>
                                                 <small className="text-primary fw-bold">SKU: {item.sku}</small>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{item.brand?.name}</td>
-                                    <td>{item.regular_price?.toLocaleString()}₫</td>
-                                    <td className="text-danger fw-bold">{item.discount_price?.toLocaleString()}₫</td>
+                                    {/* Cột Danh mục & Thương hiệu (Kết hợp) */}
+                                    <td>
+                                        <div className="d-flex flex-column">
+                                            <span className="badge bg-light text-dark border mb-1" style={{ fontSize: '11px', width: 'fit-content' }}>
+                                                {item.category?.name || 'Chưa phân loại'}
+                                            </span>
+                                            <span className="text-muted small">
+                                                Hãng: <strong>{item.brand?.name || 'N/A'}</strong>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="text-muted">
+                                        <del>{Number(item.regular_price)?.toLocaleString()}₫</del>
+                                    </td>
+                                    <td className="text-danger fw-bold">
+                                        {Number(item.discount_price)?.toLocaleString()}₫
+                                    </td>
                                     <td>
                                         <div className={`stock-badge ${item.quantity <= 5 ? 'critical' : item.quantity <= 20 ? 'low' : ''}`}>
                                             <i className="bi bi-box-seam me-1"></i>
-                                            {item.quantity ?? 0}
+                                            {item.quantity}
                                         </div>
                                     </td>
                                     <td className="text-end pe-4">
                                         <div className="d-flex justify-content-end gap-2">
-                                            <button className="btn-circle edit" onClick={() => handleEdit(item)}><i className="bi bi-pencil-square"></i></button>
-                                            <button className="btn-circle delete" onClick={() => handleDelete(item)}><i className="bi bi-trash3-fill"></i></button>
+                                            <button className="btn-circle edit" title="Chỉnh sửa" onClick={() => handleEdit(item)}>
+                                                <i className="bi bi-pencil-square"></i>
+                                            </button>
+                                            <button className="btn-circle delete" title="Xóa" onClick={() => handleDelete(item)}>
+                                                <i className="bi bi-trash3-fill"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -235,30 +254,34 @@ const AdminProduct = () => {
                 </table>
             </div>
 
-            <div className="d-flex justify-content-between align-items-center bg-white p-3 rounded shadow-sm">
-                <div className="text-muted small">
-                    Trang {filters.page} / {totalPages}
-                </div>
+            {/* Pagination */}
+            <div className="d-flex justify-content-between align-items-center bg-white p-3 rounded-3 shadow-sm">
+                <div className="text-muted small">Trang {filters.page} / {totalPages}</div>
                 <nav>
                     <ul className="pagination mb-0">
                         <li className={`page-item ${filters.page === 1 ? 'disabled' : ''}`}>
-                            <button className="page-link" onClick={() => handleUpdateFilter('page', filters.page - 1)}>Trước</button>
+                            <button className="page-link" onClick={() => handleUpdateFilter('page', filters.page - 1)}>
+                                <i className="bi bi-chevron-left"></i>
+                            </button>
                         </li>
-                        {getPagination().map((page) => (
-                            <li key={page} className={`page-item ${filters.page === page ? 'active' : ''}`}>
-                                <button className="page-link" onClick={() => handleUpdateFilter('page', page)}>{page}</button>
+                        {getPagination().map(p => (
+                            <li key={p} className={`page-item ${filters.page === p ? 'active' : ''}`}>
+                                <button className="page-link" onClick={() => handleUpdateFilter('page', p)}>{p}</button>
                             </li>
                         ))}
                         <li className={`page-item ${filters.page === totalPages ? 'disabled' : ''}`}>
-                            <button className="page-link" onClick={() => handleUpdateFilter('page', filters.page + 1)}>Sau</button>
+                            <button className="page-link" onClick={() => handleUpdateFilter('page', filters.page + 1)}>
+                                <i className="bi bi-chevron-right"></i>
+                            </button>
                         </li>
                     </ul>
                 </nav>
             </div>
 
+            {/* Modals */}
             <ProductModal
                 show={showModal}
-                handleClose={() => setShowModal(false)}
+                handleClose={() => { setShowModal(false); setDataModal({}); }}
                 action={actionModal}
                 dataModal={dataModal}
                 brands={brands}

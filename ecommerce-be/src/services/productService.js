@@ -221,33 +221,66 @@ const getProductBySlug = async (productSlug) => {
 };
 
 const createNewProduct = async (data) => {
+  const t = await db.sequelize.transaction();
   try {
-    // 1. Kiểm tra SKU trùng lặp trước khi INSERT
-    const checkSku = await db.products.findOne({ where: { sku: data.sku } });
-    if (checkSku) {
-      return { EC: 1, EM: "Mã SKU này đã tồn tại trên hệ thống!", DT: "" };
+    // 1. Tạo slug ban đầu
+    let baseSlug = data.slug || slugify(data.name, { lower: true });
+    let finalSlug = baseSlug;
+
+    // 2. Kiểm tra slug đã tồn tại chưa (Vòng lặp để tránh trùng nhiều lần)
+    let count = 1;
+    while (true) {
+      const existing = await db.products.findOne({
+        where: { slug: finalSlug },
+        transaction: t,
+      });
+      if (!existing) break;
+      finalSlug = `${baseSlug}-${count}`;
+      count++;
     }
 
-    // 2. Tạo sản phẩm
-    const product = await db.products.create({
-      category_id: data.category_id || null,
-      brand_id: data.brand_id || null,
-      sku: data.sku,
-      name: data.name,
-      slug: data.slug || slugify(data.name, { lower: true }),
-      regular_price: parseFloat(data.regular_price) || 0,
-      discount_price: parseFloat(data.discount_price) || 0,
-      quantity: parseInt(data.quantity) || 0,
-      status: data.status || "active",
-    });
+    // 3. Tạo sản phẩm với finalSlug đã kiểm tra
+    const product = await db.products.create(
+      {
+        sku: data.sku,
+        name: data.name,
+        slug: finalSlug, // Dùng slug mới nhất
+        regular_price: data.regular_price || 0,
+        discount_price: data.discount_price || 0,
+        quantity: data.quantity || 0,
+        status: data.status || "active",
+        category_id: data.category_id,
+      },
+      { transaction: t },
+    );
 
+    // 4. Lưu ảnh (Giữ nguyên logic cũ)
+    if (data.images && data.images.length > 0) {
+      const imageData = data.images
+        .filter((url) => url.trim() !== "")
+        .map((url, index) => ({
+          product_id: product.id,
+          url: url,
+          is_thumbnail: index === 0 ? 1 : 0,
+        }));
+      await db.product_images.bulkCreate(imageData, { transaction: t });
+    }
+
+    await t.commit();
     return { EC: 0, EM: "Tạo sản phẩm thành công", DT: product };
   } catch (error) {
-    console.log(">>> Service Error:", error);
-    return { EC: -1, EM: "Lỗi hệ thống", DT: "" };
+    await t.rollback();
+    console.error(">>> SERVICE ERROR:", error);
+    return {
+      EC: -1,
+      EM:
+        error.name === "SequelizeUniqueConstraintError"
+          ? "Lỗi: SKU hoặc Slug bị trùng lặp "
+          : "Lỗi hệ thống",
+      DT: "",
+    };
   }
 };
-
 const deleteProduct = async (id) => {
   try {
     await db.products.destroy({ where: { id } });
@@ -258,11 +291,83 @@ const deleteProduct = async (id) => {
 };
 
 const updateProduct = async (id, data) => {
+  // 1. Khởi tạo Transaction (để rollback nếu một trong hai bảng lỗi)
+  const transaction = await db.sequelize.transaction();
+
   try {
-    await db.products.update({ ...data }, { where: { id } });
-    return { EC: 0, EM: "Update success", DT: "" };
+    // 2. Kiểm tra sản phẩm có tồn tại không
+    let product = await db.products.findOne({
+      where: { id: id },
+    });
+
+    if (!product) {
+      return {
+        EC: 1,
+        EM: "Sản phẩm không tồn tại!",
+        DT: "",
+      };
+    }
+
+    // 3. Cập nhật thông tin bảng Product
+    await db.products.update(
+      {
+        name: data.name,
+        sku: data.sku,
+        regular_price: data.regular_price,
+        discount_price: data.discount_price,
+        quantity: data.quantity,
+        brand_id: data.brand_id,
+        category_id: data.category_id,
+        // Lấy ảnh đầu tiên làm ảnh đại diện (Thumbnail)
+        thumbnailUrl:
+          data.images && data.images.length > 0 ? data.images[0] : "",
+      },
+      {
+        where: { id: id },
+        transaction,
+      },
+    );
+
+    // 4. Cập nhật bảng Hình ảnh (ProductImage)
+    if (data.images && Array.isArray(data.images)) {
+      // A. Xóa toàn bộ ảnh cũ của sản phẩm này
+      await db.product_images.destroy({
+        where: { product_id: id },
+        transaction,
+      });
+
+      // B. Lọc các URL hợp lệ và chuẩn bị mảng để Insert
+      const imageRecords = data.images
+        .filter((url) => url && url.trim() !== "") // Loại bỏ chuỗi rỗng/null
+        .map((url, index) => ({
+          product_id: id,
+          url: url,
+          is_thumbnail: index === 0 ? 1 : 0, // Ảnh đầu tiên là thumbnail
+        }));
+
+      // C. Bulk insert ảnh mới
+      if (imageRecords.length > 0) {
+        await db.product_images.bulkCreate(imageRecords, { transaction });
+      }
+    }
+
+    // 5. Mọi thứ thành công thì Lưu (Commit)
+    await transaction.commit();
+
+    return {
+      EC: 0,
+      EM: "Cập nhật sản phẩm và hình ảnh thành công!",
+      DT: "",
+    };
   } catch (e) {
-    return { EC: -1, EM: "Lỗi service update", DT: "" };
+    // Nếu có lỗi, Hoàn tác (Rollback) toàn bộ quá trình
+    await transaction.rollback();
+    console.log(">>> Check error: ", e);
+    return {
+      EC: -1,
+      EM: "Lỗi hệ thống: " + e.message,
+      DT: "",
+    };
   }
 };
 
@@ -315,6 +420,7 @@ const getProductsForAdmin = async (params) => {
           attributes: ["url"],
         },
         { model: db.brands, as: "brand", attributes: ["name"] },
+        { model: db.categories, as: "category", attributes: ["name"] },
       ],
       order: sortOptions[sort], // Thực hiện sắp xếp ở đây
       distinct: true,

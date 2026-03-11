@@ -7,6 +7,7 @@ import {
   deleteProduct,
   updateProduct,
   getProductsForAdmin,
+  getProductDetailById,
 } from "../services/productService.js";
 import { sendResponse } from "../utils/apiResponse.js";
 
@@ -64,6 +65,18 @@ export const readProducts = async (req, res) => {
   }
 };
 
+// Lấy chi tiết sản phẩm theo ID (dùng cho Admin Edit)
+export const getProductDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await getProductDetailById(id);
+    return sendResponse(res, result.EC, result.EM, result.DT);
+  } catch (error) {
+    console.error(">>> Controller getProductDetail Error:", error);
+    return sendResponse(res, -1, "Lỗi server", null);
+  }
+};
+
 export const createProduct = async (req, res) => {
   try {
     const result = await createNewProduct(req.body);
@@ -77,11 +90,22 @@ export const createProduct = async (req, res) => {
 export const updateProductbyID = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await updateProduct(id, req.body);
+    const data = req.body;
+
+    // 1. Kiểm tra ID có tồn tại trong params không (Tránh null/undefined)
+    if (!id) {
+      return sendResponse(res, 1, "Missing product ID", null);
+    }
+
+    const result = await updateProduct(id, data);
+
+    // 4. Trả về kết quả đồng nhất qua sendResponse
     return sendResponse(res, result.EC, result.EM, result.DT);
   } catch (error) {
+    // Log lỗi chi tiết để debug trong môi trường development
     console.error(">>> Controller Update Error:", error);
-    return sendResponse(res, -1, "Lỗi server (Update)", null);
+
+    return sendResponse(res, -1, "Internal Server Error", null);
   }
 };
 

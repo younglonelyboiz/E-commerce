@@ -1,55 +1,91 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 
 const ProductModal = ({ show, handleClose, action, dataModal, brands, categories, handleSubmitForm }) => {
-    const [productData, setProductData] = useState({
-        name: '', sku: '', regular_price: '', discount_price: '',
+    const initialState = {
+        name: '', sku: '', regular_price: 0, discount_price: 0,
         quantity: 0, brand_id: '', category_id: '', images: ['']
-    });
-
-    // Trong ProductModal.jsx
-    useEffect(() => {
-        if (action === 'UPDATE' && dataModal && dataModal.id) {
-            // Fill dữ liệu từ DB vào Form
-            setProductData({
-                id: dataModal.id,
-                name: dataModal.name || '',
-                sku: dataModal.sku || '',
-                regular_price: dataModal.regular_price || 0,
-                discount_price: dataModal.discount_price || 0,
-                quantity: dataModal.quantity || 0,
-                brand_id: dataModal.brand_id || '',
-                category_id: dataModal.category_id || '',
-                // Map mảng ảnh từ DB (nếu có)
-                images: dataModal.product_images?.length > 0
-                    ? dataModal.product_images.map(img => img.url)
-                    : ['']
-            });
-        } else if (action === 'CREATE') {
-            // Reset Form khi Thêm mới
-            setProductData({
-                name: '', sku: '', regular_price: 0, discount_price: 0,
-                quantity: 0, brand_id: '', category_id: '', images: ['']
-            });
-        }
-    }, [dataModal, action]);
-
-    // Thêm một ô nhập URL ảnh mới
-    const handleAddImageInput = () => {
-        setProductData({ ...productData, images: [...productData.images, ''] });
     };
 
-    // Cập nhật giá trị URL ảnh tại vị trí index
+    const [productData, setProductData] = useState(initialState);
+    const [errors, setErrors] = useState({});
+
+    useEffect(() => {
+        if (show) {
+            setErrors({});
+
+            // Kiểm tra dataModal bây giờ phải là object sản phẩm (có name, sku...)
+            if (action === 'UPDATE' && dataModal && dataModal.id) {
+                // Lấy danh sách ảnh từ product_images array hoặc thumbnailUrl
+                let images = [];
+                if (dataModal.product_images && dataModal.product_images.length > 0) {
+                    // Lấy tất cả URL từ mảng product_images
+                    images = dataModal.product_images.map(img => img.url);
+                } else if (dataModal.thumbnailUrl) {
+                    images = [dataModal.thumbnailUrl];
+                } else {
+                    images = [''];
+                }
+
+                setProductData({
+                    id: dataModal.id,
+                    name: dataModal.name || '',
+                    sku: dataModal.sku || '',
+                    // Ép kiểu String từ API sang Number cho input
+                    regular_price: dataModal.regular_price ? Number(dataModal.regular_price) : 0,
+                    discount_price: dataModal.discount_price ? Number(dataModal.discount_price) : 0,
+                    quantity: dataModal.quantity || 0,
+                    // Ép kiểu ID về String để khớp với value của <option>
+                    brand_id: dataModal.brand_id ? String(dataModal.brand_id) : '',
+                    category_id: dataModal.category_id ? String(dataModal.category_id) : '',
+                    images: images
+                });
+            } else {
+                setProductData({
+                    name: '', sku: '', regular_price: 0, discount_price: 0,
+                    quantity: 0, brand_id: '', category_id: '', images: ['']
+                });
+            }
+        }
+    }, [show, dataModal, action]);
+
+    const validateFields = () => {
+        let newErrors = {};
+        if (!productData.name?.trim()) newErrors.name = true;
+        if (!productData.sku?.trim()) newErrors.sku = true;
+        if (!productData.category_id) newErrors.category_id = true;
+        if (!productData.brand_id) newErrors.brand_id = true;
+        if (!productData.images[0]?.trim()) newErrors.images = true;
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleConfirm = async () => {
+        if (!validateFields()) {
+            toast.error("Vui lòng điền đầy đủ các thông tin bắt buộc!");
+            return;
+        }
+
+        const response = await handleSubmitForm(productData);
+
+        if (response && response.EC === 0) {
+            toast.success(response.EM);
+            handleClose();
+        } else {
+            toast.error(response.EM || "Có lỗi xảy ra!");
+            if (response.EM?.includes("SKU")) {
+                setErrors(prev => ({ ...prev, sku: true }));
+            }
+        }
+    };
+
     const handleImageInputChange = (index, value) => {
         const newImages = [...productData.images];
         newImages[index] = value;
         setProductData({ ...productData, images: newImages });
-    };
-
-    // Xóa một ô nhập ảnh
-    const handleRemoveImageInput = (index) => {
-        const newImages = productData.images.filter((_, i) => i !== index);
-        setProductData({ ...productData, images: newImages.length > 0 ? newImages : [''] });
+        if (index === 0) setErrors(prev => ({ ...prev, images: false }));
     };
 
     return (
@@ -61,35 +97,43 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
             </Modal.Header>
             <Modal.Body>
                 <Form>
-                    {/* Tên và SKU */}
                     <Row className="mb-3">
                         <Form.Group as={Col} md={8}>
                             <Form.Label className="fw-bold small">Tên sản phẩm</Form.Label>
                             <Form.Control
                                 type="text"
-                                placeholder="Nhập tên sản phẩm..."
+                                isInvalid={errors.name}
                                 value={productData.name}
-                                onChange={(e) => setProductData({ ...productData, name: e.target.value })}
+                                onChange={(e) => {
+                                    setProductData({ ...productData, name: e.target.value });
+                                    setErrors(prev => ({ ...prev, name: false }));
+                                }}
                             />
                         </Form.Group>
                         <Form.Group as={Col} md={4}>
                             <Form.Label className="fw-bold small">Mã SKU</Form.Label>
                             <Form.Control
                                 type="text"
-                                placeholder="Ví dụ: SP-00001"
+                                isInvalid={errors.sku}
                                 value={productData.sku}
-                                onChange={(e) => setProductData({ ...productData, sku: e.target.value })}
+                                onChange={(e) => {
+                                    setProductData({ ...productData, sku: e.target.value });
+                                    setErrors(prev => ({ ...prev, sku: false }));
+                                }}
                             />
                         </Form.Group>
                     </Row>
 
-                    {/* Danh mục và Thương hiệu */}
                     <Row className="mb-3">
                         <Form.Group as={Col}>
                             <Form.Label className="fw-bold small">Danh mục</Form.Label>
                             <Form.Select
+                                isInvalid={errors.category_id}
                                 value={productData.category_id}
-                                onChange={(e) => setProductData({ ...productData, category_id: e.target.value })}
+                                onChange={(e) => {
+                                    setProductData({ ...productData, category_id: e.target.value });
+                                    setErrors(prev => ({ ...prev, category_id: false }));
+                                }}
                             >
                                 <option value="">Chọn danh mục...</option>
                                 {categories.map(cat => (
@@ -100,8 +144,12 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
                         <Form.Group as={Col}>
                             <Form.Label className="fw-bold small">Thương hiệu</Form.Label>
                             <Form.Select
+                                isInvalid={errors.brand_id}
                                 value={productData.brand_id}
-                                onChange={(e) => setProductData({ ...productData, brand_id: e.target.value })}
+                                onChange={(e) => {
+                                    setProductData({ ...productData, brand_id: e.target.value });
+                                    setErrors(prev => ({ ...prev, brand_id: false }));
+                                }}
                             >
                                 <option value="">Chọn thương hiệu...</option>
                                 {brands.map(brand => (
@@ -111,7 +159,6 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
                         </Form.Group>
                     </Row>
 
-                    {/* Giá và Số lượng */}
                     <Row className="mb-3">
                         <Form.Group as={Col}>
                             <Form.Label className="fw-bold small">Giá gốc (đ)</Form.Label>
@@ -130,7 +177,7 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
                             />
                         </Form.Group>
                         <Form.Group as={Col}>
-                            <Form.Label className="fw-bold small">Số lượng tồn kho (Quantity)</Form.Label>
+                            <Form.Label className="fw-bold small">Số lượng</Form.Label>
                             <Form.Control
                                 type="number"
                                 value={productData.quantity}
@@ -139,11 +186,10 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
                         </Form.Group>
                     </Row>
 
-                    {/* Quản lý danh sách URL Ảnh */}
                     <div className="mt-4">
                         <div className="d-flex justify-content-between align-items-center mb-2">
                             <label className="fw-bold small">Danh sách URL Hình ảnh</label>
-                            <Button variant="outline-primary" size="sm" onClick={handleAddImageInput}>
+                            <Button variant="outline-primary" size="sm" onClick={() => setProductData({ ...productData, images: [...productData.images, ''] })}>
                                 <i className="bi bi-plus-lg me-1"></i>Thêm ảnh
                             </Button>
                         </div>
@@ -152,7 +198,8 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
                                 <Col>
                                     <Form.Control
                                         type="text"
-                                        placeholder={`URL ảnh ${index + 1} ${index === 0 ? '(Làm ảnh đại diện)' : ''}`}
+                                        isInvalid={index === 0 && errors.images}
+                                        placeholder={`URL ảnh ${index + 1} ${index === 0 ? '(Bắt buộc)' : ''}`}
                                         value={url}
                                         onChange={(e) => handleImageInputChange(index, e.target.value)}
                                     />
@@ -161,7 +208,10 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
                                     <Button
                                         variant="outline-danger"
                                         size="sm"
-                                        onClick={() => handleRemoveImageInput(index)}
+                                        onClick={() => {
+                                            const newImages = productData.images.filter((_, i) => i !== index);
+                                            setProductData({ ...productData, images: newImages.length > 0 ? newImages : [''] });
+                                        }}
                                         disabled={productData.images.length === 1}
                                     >
                                         <i className="bi bi-trash"></i>
@@ -169,15 +219,12 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
                                 </Col>
                             </Row>
                         ))}
-                        <Form.Text className="text-muted">
-                            Ảnh đầu tiên sẽ được hệ thống đặt làm ảnh đại diện (Thumbnail).
-                        </Form.Text>
                     </div>
                 </Form>
             </Modal.Body>
             <Modal.Footer className="bg-light">
                 <Button variant="secondary" onClick={handleClose}>Đóng</Button>
-                <Button variant="primary" className="px-4" onClick={() => handleSubmitForm(productData)}>
+                <Button variant="primary" className="px-4" onClick={handleConfirm}>
                     {action === 'CREATE' ? 'Xác nhận thêm' : 'Lưu thay đổi'}
                 </Button>
             </Modal.Footer>
@@ -185,7 +232,7 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
     );
 };
 
-// Modal xác nhận xóa
+// Modal Delete 
 const ModalDelete = ({ show, handleClose, dataModal, confirmDelete }) => {
     return (
         <Modal show={show} onHide={handleClose} centered>
@@ -196,7 +243,7 @@ const ModalDelete = ({ show, handleClose, dataModal, confirmDelete }) => {
                 <i className="bi bi-exclamation-triangle text-danger display-4 mb-3 d-block"></i>
                 <p className="mb-0">Bạn có chắc chắn muốn xóa sản phẩm:</p>
                 <h5 className="fw-bold mt-2">{dataModal?.name}</h5>
-                <p className="text-muted small mt-3">Hành động này không thể hoàn tác và sẽ xóa toàn bộ dữ liệu liên quan.</p>
+                <p className="text-muted small mt-3">Hành động này không thể hoàn tác.</p>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={handleClose}>Hủy bỏ</Button>
