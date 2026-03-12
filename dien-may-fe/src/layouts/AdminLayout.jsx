@@ -8,7 +8,7 @@ const AdminLayout = () => {
             {/* SIDEBAR BÊN TRÁI */}
             <aside className="admin-sidebar">
                 <div className="sidebar-brand">
-                    <h4 className="m-0">ADMIN CP</h4>
+                    <h4 className="m-0">ADMIN </h4>
                 </div>
                 <nav className="sidebar-nav">
                     <NavLink to="/admin" end className="nav-item">
@@ -21,7 +21,7 @@ const AdminLayout = () => {
                         <i className="bi bi-cart-check me-2"></i> Đơn hàng
                     </NavLink>
                     <NavLink to="/admin/users" className="nav-item">
-                        <i className="bi bi-people me-2"></i> Khách hàng
+                        <i className="bi bi-people me-2"></i> Users
                     </NavLink>
                 </nav>
                 <div className="sidebar-footer">
@@ -35,7 +35,7 @@ const AdminLayout = () => {
             <main className="admin-main">
                 <header className="admin-topbar shadow-sm">
                     <div className="d-flex align-items-center">
-                        <i className="bi bi-list fs-4 me-3"></i>
+                        {/* <i className="bi bi-list fs-4 me-3"></i> */}
                         <span className="fw-bold">Hệ thống quản trị Điện Máy</span>
                     </div>
                     <div className="admin-user-info">

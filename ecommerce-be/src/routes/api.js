@@ -20,7 +20,11 @@ import {
   handleLogin,
   getUserAccount,
   handleLogout,
+  readUsersAdmin,
+  readUserDetail,
 } from "../controllers/userController.js";
+
+import { readAllRoles, updateRole } from "../controllers/roleController.js";
 
 const initApiRoutes = (app) => {
   const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
@@ -45,8 +49,14 @@ const initApiRoutes = (app) => {
     updateProductbyID,
   ); // --- Routes cho trang chủ (Điện Máy Xanh style) ---
 
+  router.get("/admin/users", checkUserJWT, checkAdminRole, readUsersAdmin);
+  router.get("/admin/users/:id", checkUserJWT, checkAdminRole, readUserDetail);
+
   router.get("/products", readProducts);
   router.get("/products/:id", getProductDetail);
+
+  router.get("/role/read", checkUserJWT, checkAdminRole, readAllRoles);
+  router.put("/user/update-role", checkUserJWT, checkAdminRole, updateRole);
 
   router.get("/top-sale", getSaleList);
   router.get("/top-selling", getSalingList); // --- Các routes khác ---

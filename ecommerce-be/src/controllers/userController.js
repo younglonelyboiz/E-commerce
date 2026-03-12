@@ -1,5 +1,9 @@
 import { sendResponse } from "../utils/apiResponse.js";
-import { createUser } from "../services/userService.js";
+import {
+  createUser,
+  getUserWithPagination,
+  getUserDetailWithOrders,
+} from "../services/userService.js";
 import { loginUser } from "../services/authService.js";
 
 const checkValidUserData = (data) => {
@@ -91,9 +95,47 @@ export const getUserAccount = async (req, res) => {
 
 export const handleLogout = (req, res) => {
   res.clearCookie("access_token");
-  return res.status(200).json({
-    EC: 0,
-    EM: "Đăng xuất thành công!",
-    DT: "",
-  });
+  return sendResponse(res, 0, "Logout successfully", null);
+};
+
+export const getUserDetail = async (req, res) => {
+  try {
+    let id = req.params.id;
+    let data = await getUserDetailWithOrders(id);
+    return sendResponse(res, data.EC, data.EM, data.DT);
+  } catch (e) {
+    return sendResponse(res, -1, "error from server", "");
+  }
+};
+
+export const readUsersAdmin = async (req, res) => {
+  try {
+    let page = req.query.page || 1;
+    let limit = req.query.limit || 15;
+
+    // Lấy các tham số từ Query String
+    let filters = {
+      search: req.query.search || "",
+      sortBy: req.query.sortBy || "id", // 'id', 'role', hoặc 'totalSpent'
+      sortOrder: req.query.sortOrder || "DESC", // 'ASC' hoặc 'DESC'
+    };
+
+    let data = await getUserWithPagination(+page, +limit, filters);
+
+    return sendResponse(res, data.EC, data.EM, data.DT);
+  } catch (e) {
+    console.log(">>> Error in readUsersAdmin:", e);
+    return sendResponse(res, -1, "Error from server", "");
+  }
+};
+
+export const readUserDetail = async (req, res) => {
+  try {
+    let id = req.params.id;
+    let data = await getUserDetailWithOrders(id);
+    return sendResponse(res, data.EC, data.EM, data.DT);
+  } catch (e) {
+    console.log(">>> Error in readUserDetail:", e);
+    return sendResponse(res, -1, "Error from server", "");
+  }
 };

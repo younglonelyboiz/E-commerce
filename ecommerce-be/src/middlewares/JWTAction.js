@@ -54,8 +54,6 @@ const checkUserJWT = (req, res, next) => {
 
 const checkAdminRole = (req, res, next) => {
   // req.user đã được nạp từ middleware checkUserJWT trước đó
-  console.log(">>> Check Admin Role cho User:", req.user);
-  console.log(">>> Roles hiện tại:", req.user);
   if (req.user && req.user.roles) {
     // Chuyển tất cả role trong mảng sang chữ Hoa để so sánh cho chắc
     const isAdmin = req.user.roles.some(

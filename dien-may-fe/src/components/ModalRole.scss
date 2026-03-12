@@ -1,0 +1,52 @@
+.custom-modal-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+
+    .custom-overlay {
+        position: absolute;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(2px); // Khử lỗi khung mờ thừa
+    }
+
+    .custom-modal-content {
+        position: relative;
+        z-index: 10000;
+        background: white;
+        width: 100%;
+        max-width: 420px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .role-card {
+        transition: all 0.2s ease-in-out;
+        border: 2px solid #eee;
+        cursor: pointer;
+
+        &:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+
+        // ĐÂY LÀ PHẦN LÀM ROLE SÁNG SẴN
+        &.selected {
+            background-color: #f0f7ff !important; // Xanh nhạt sáng
+            border-color: #0d6efd !important;   // Viền xanh đậm
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.1);
+
+            .text-primary {
+                color: #0d6efd !important;
+            }
+        }
+
+        .form-check-input {
+            width: 1.2rem;
+            height: 1.2rem;
+            cursor: pointer;
+        }
+    }
+}

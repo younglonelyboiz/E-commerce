@@ -21,3 +21,15 @@ export const getUserAccount = () => {
 export const logoutUser = () => {
   return axios.post("/logout"); // axios này là cái instance đã có withCredentials
 };
+
+export const fetchAllUserByAdmin = (page, limit, search, sortBy, sortOrder) => {
+  return axios.get(
+    `/admin/users?page=${page}&limit=${limit}&search=${search}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+  );
+};
+
+export const readUserDetail = (id) => {
+  return axios.get(`/admin/users/${id}`); 
+};
+
+

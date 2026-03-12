@@ -8,6 +8,8 @@ import CategoryPage from "../pages/CategoryPage";
 // Import các trang Admin
 import AdminLayout from "../layouts/AdminLayout"; // Bạn cần tạo layout này
 import AdminProduct from "../pages/AdminProduct";
+import AdminUsers from "../pages/AdminUsers";
+import UserDetail from "../pages/UserDetail";
 // import AdminDashboard from "../pages/AdminDashboard";
 import App from "../App";
 import AdminRoute from "../routes/AdminRoute";
@@ -40,6 +42,14 @@ export const router = createBrowserRouter([
                 path: "products",
                 element: <AdminProduct />,
             },
+            {
+                path: "users",
+                element: <AdminUsers />,
+            },
+            {
+                path: "user/:id",
+                element: <UserDetail />
+            }
             // Thêm các con của admin vào đây thoải mái
         ]
     }
