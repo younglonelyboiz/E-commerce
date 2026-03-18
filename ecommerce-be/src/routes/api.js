@@ -26,6 +26,8 @@ import {
 
 import { readAllRoles, updateRole } from "../controllers/roleController.js";
 
+import { addToCart, getCart } from "../controllers/cartController.js";
+
 const initApiRoutes = (app) => {
   const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
 
@@ -65,6 +67,10 @@ const initApiRoutes = (app) => {
   router.get("/categories", getAllCategories);
 
   // Route này yêu cầu phải có Cookie hợp lệ mới vào được
+  // --- Routes Giỏ hàng ---
+  router.post("/cart/add", checkUserJWT, addToCart);
+  router.get("/cart", checkUserJWT, getCart);
+
   router.get("/account", checkUserJWT, getUserAccount);
   router.post("/login", handleLogin);
   router.post("/register-user", registerNewUser); // Route kiểm tra JWT

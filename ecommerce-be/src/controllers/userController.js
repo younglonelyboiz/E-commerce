@@ -7,6 +7,7 @@ import {
 import { loginUser } from "../services/authService.js";
 
 const checkValidUserData = (data) => {
+  console.log(data);
   if (
     !data.email ||
     !data.password ||

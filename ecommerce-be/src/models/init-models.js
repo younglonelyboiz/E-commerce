@@ -111,6 +111,18 @@ export default function initModels(sequelize) {
   cart_products.belongsTo(carts, { as: "cart", foreignKey: "cart_id" });
   carts.hasMany(cart_products, { as: "cart_products", foreignKey: "cart_id" });
 
+  carts.belongsTo(users, { as: "user", foreignKey: "user_id" });
+  users.hasOne(carts, { as: "cart", foreignKey: "user_id" });
+
+  cart_products.belongsTo(products, {
+    as: "product",
+    foreignKey: "product_id",
+  });
+  products.hasMany(cart_products, {
+    as: "cart_products",
+    foreignKey: "product_id",
+  });
+
   // 6. ĐƠN HÀNG & GIAO DỊCH
   cc_transactions.belongsTo(orders, { as: "order", foreignKey: "order_id" });
   orders.hasMany(cc_transactions, {

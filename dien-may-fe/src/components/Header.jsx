@@ -5,11 +5,12 @@ import { useEffect, useState, useContext } from "react"; // Thêm useContext
 import { getCategories } from "../services/categoryService.js";
 import { UserContext } from "../context/UserContext.jsx"; // Import Context
 import { logoutUser } from "../services/userService.js"; // Import hàm logout API
+import { getCartApi } from "../services/cartService.js"; // Import API lấy giỏ hàng
 import { toast } from "react-toastify";
 
 function Header() {
     const [categories, setCategories] = useState([]);
-    const { user, logoutContext } = useContext(UserContext); // Lấy data từ kho chung
+    const { user, logoutContext, cartCount, setCartCount } = useContext(UserContext); // Lấy thêm setCartCount
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -23,6 +24,25 @@ function Header() {
         };
         fetchCategories();
     }, []);
+
+    // Lấy số lượng giỏ hàng thực tế từ DB mỗi khi tải trang (F5) hoặc vừa đăng nhập
+    useEffect(() => {
+        const fetchCartCount = async () => {
+            if (user && user.auth && setCartCount) {
+                try {
+                    let res = await getCartApi();
+                    if (res && res.EC === 0) {
+                        // Cộng dồn tổng số lượng các sản phẩm đang có trong giỏ
+                        let totalQty = res.DT.reduce((sum, item) => sum + item.quantity, 0);
+                        setCartCount(totalQty);
+                    }
+                } catch (error) {
+                    console.error("Lỗi đếm giỏ hàng:", error);
+                }
+            }
+        };
+        fetchCartCount();
+    }, [user]); // Chạy lại mỗi khi user thay đổi (đăng nhập/đăng xuất)
 
     const handleLogout = async () => {
         try {
@@ -81,7 +101,7 @@ function Header() {
                         <Link to="/cart" className="position-relative me-3 text-center text-decoration-none text-dark">
                             <i className="bi bi-cart3 fs-4"></i>
                             <span className="badge bg-warning text-dark position-absolute top-0 start-100 translate-middle">
-                                0
+                                {cartCount || 0}
                             </span>
                             <div className="small">Giỏ hàng</div>
                         </Link>

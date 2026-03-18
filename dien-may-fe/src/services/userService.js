@@ -6,6 +6,7 @@ export const registerNewUser = (userData) => {
     email: userData.email,
     password: userData.password,
     user_name: userData.user_name,
+    confirmPassword: userData.confirmPassword,
   });
 };
 
@@ -29,7 +30,5 @@ export const fetchAllUserByAdmin = (page, limit, search, sortBy, sortOrder) => {
 };
 
 export const readUserDetail = (id) => {
-  return axios.get(`/admin/users/${id}`); 
+  return axios.get(`/admin/users/${id}`);
 };
-
-

@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import CardProduct from '../components/CardProduct';
 import { getProducts } from "../services/product.api";
+import { addToCartApi } from '../services/cartService';
+import { UserContext } from '../context/UserContext'; // Import UserContext
+import { toast } from 'react-toastify';
 import './ProductDetail.scss';
 
 const ProductDetail = () => {
@@ -11,6 +14,9 @@ const ProductDetail = () => {
     const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
     const [activeImg, setActiveImg] = useState("");
+
+    // Lấy thông tin user từ Context để kiểm tra đăng nhập
+    const { user, updateCartCount } = useContext(UserContext);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -70,6 +76,31 @@ const ProductDetail = () => {
     const handleQuantity = (type) => {
         if (type === 'plus') setQuantity(prev => prev + 1);
         else if (type === 'minus' && quantity > 1) setQuantity(prev => prev - 1);
+    };
+
+    // Hàm xử lý khi bấm nút "Thêm vào giỏ hàng"
+    const handleAddToCart = async () => {
+        // 1. Kiểm tra đăng nhập
+        if (!user || user.auth === false) {
+            toast.warning("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+            return;
+        }
+
+        // 2. Gọi API thêm vào giỏ
+        try {
+            let res = await addToCartApi(product.id, quantity);
+            if (res && res.EC === 0) {
+                toast.success(res.EM || "Thêm vào giỏ hàng thành công!");
+                // Cập nhật số lượng trên Header
+                if (updateCartCount) {
+                    updateCartCount(quantity);
+                }
+            } else {
+                toast.error(res.EM || "Lỗi khi thêm vào giỏ hàng!");
+            }
+        } catch (error) {
+            toast.error("Lỗi hệ thống khi thêm vào giỏ!");
+        }
     };
 
     if (loading) return <div className="loading-state">Đang tải dữ liệu sản phẩm...</div>;
@@ -140,7 +171,7 @@ const ProductDetail = () => {
                         <button className="btn btn-danger btn-buy py-3" onClick={() => alert("Đã thêm vào giỏ!")}>
                             MUA NGAY <br /> <small>Giao tận nơi hoặc nhận tại chỗ</small>
                         </button>
-                        <button className="btn btn-outline-primary py-2">
+                        <button className="btn btn-outline-primary py-2" onClick={handleAddToCart}>
                             <i className="bi bi-cart-plus me-2"></i> Thêm vào giỏ hàng
                         </button>
                     </div>

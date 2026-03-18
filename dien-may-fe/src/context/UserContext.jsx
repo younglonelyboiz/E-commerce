@@ -12,6 +12,8 @@ export const UserProvider = ({ children }) => {
         isLoading: true // Mặc định là true khi bắt đầu load app
     });
 
+    const [cartCount, setCartCount] = useState(0); // State lưu số lượng giỏ hàng
+
     const loginContext = (userData) => {
         setUser({
             email: userData?.email,
@@ -24,7 +26,13 @@ export const UserProvider = ({ children }) => {
 
     const logoutContext = () => {
         setUser({ email: "", userName: "", roles: [], auth: false, isLoading: false });
+        setCartCount(0); // Reset số lượng về 0 khi đăng xuất
     };
+
+    // Hàm này giúp ProductDetail gọi để cộng dồn số lượng mà không cần F5
+    const updateCartCount = (quantity) => {
+        setCartCount(prev => prev + quantity);
+    }
 
     // Hàm nạp lại dữ liệu từ phiên đăng nhập cũ (khi F5)
     const fetchUser = async () => {
@@ -45,7 +53,7 @@ export const UserProvider = ({ children }) => {
     }, []);
 
     return (
-        <UserContext.Provider value={{ user, loginContext, logoutContext }}>
+        <UserContext.Provider value={{ user, loginContext, logoutContext, cartCount, setCartCount, updateCartCount }}>
             {children}
         </UserContext.Provider>
     );
