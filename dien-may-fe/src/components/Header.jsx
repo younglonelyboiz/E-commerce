@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import "./Header.scss";
 import CategoryMenu from "./CategoryMenu.jsx";
 import { useEffect, useState, useContext } from "react"; // Thêm useContext
@@ -7,11 +7,14 @@ import { UserContext } from "../context/UserContext.jsx"; // Import Context
 import { logoutUser } from "../services/userService.js"; // Import hàm logout API
 import { getCartApi } from "../services/cartService.js"; // Import API lấy giỏ hàng
 import { toast } from "react-toastify";
+import { getUserOrdersApi } from "../services/userOrderService.js";
 
 function Header() {
     const [categories, setCategories] = useState([]);
     const { user, logoutContext, cartCount, setCartCount } = useContext(UserContext); // Lấy thêm setCartCount
     const navigate = useNavigate();
+    const location = useLocation();
+    const [activeOrderCount, setActiveOrderCount] = useState(0);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -44,6 +47,26 @@ function Header() {
         fetchCartCount();
     }, [user]); // Chạy lại mỗi khi user thay đổi (đăng nhập/đăng xuất)
 
+    // Lấy số lượng đơn hàng đang xử lý/chờ giao
+    useEffect(() => {
+        const fetchOrderCount = async () => {
+            if (user && user.auth) {
+                try {
+                    let res = await getUserOrdersApi();
+                    if (res && res.EC === 0) {
+                        let activeCount = res.DT.filter(o => ['pending', 'processing', 'shipped'].includes(o.order_status)).length;
+                        setActiveOrderCount(activeCount);
+                    }
+                } catch (error) {
+                    console.error("Lỗi đếm đơn hàng:", error);
+                }
+            } else {
+                setActiveOrderCount(0);
+            }
+        };
+        fetchOrderCount();
+    }, [user, location.pathname]); // Cập nhật lại khi đăng nhập hoặc chuyển trang
+
     const handleLogout = async () => {
         try {
             let res = await logoutUser(); // Gọi API xóa cookie ở Backend
@@ -65,7 +88,7 @@ function Header() {
             {/* Top bar */}
             <div className="top-bar text-center py-1">
                 <Link to="/promotion">
-                    Tết "ANT" 2026 sắp trở lại - Đăng ký ngay!
+                    Mua đồ điện tử tới ngay Điện Máy HĐ
                 </Link>
             </div>
 
@@ -98,6 +121,16 @@ function Header() {
 
                     {/* Utilities */}
                     <div className="d-flex align-items-center">
+                        <Link to="/order-history" className="position-relative me-3 text-center text-decoration-none text-dark">
+                            <i className="bi bi-box-seam fs-4"></i>
+                            {activeOrderCount > 0 && (
+                                <span className="badge bg-danger text-white position-absolute top-0 start-100 translate-middle rounded-pill border border-light">
+                                    {activeOrderCount}
+                                </span>
+                            )}
+                            <div className="small">Đơn hàng</div>
+                        </Link>
+
                         <Link to="/cart" className="position-relative me-3 text-center text-decoration-none text-dark">
                             <i className="bi bi-cart3 fs-4"></i>
                             <span className="badge bg-warning text-dark position-absolute top-0 start-100 translate-middle">

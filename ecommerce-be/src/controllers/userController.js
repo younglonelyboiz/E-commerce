@@ -3,6 +3,7 @@ import {
   createUser,
   getUserWithPagination,
   getUserDetailWithOrders,
+  changePasswordService,
 } from "../services/userService.js";
 import { loginUser } from "../services/authService.js";
 
@@ -127,6 +128,23 @@ export const readUsersAdmin = async (req, res) => {
   } catch (e) {
     console.log(">>> Error in readUsersAdmin:", e);
     return sendResponse(res, -1, "Error from server", "");
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return sendResponse(res, 1, "Vui lòng nhập đầy đủ mật khẩu!", "");
+    }
+
+    let data = await changePasswordService(userId, oldPassword, newPassword);
+    return sendResponse(res, data.EC, data.EM, data.DT);
+  } catch (error) {
+    console.error(">>> Error in changePassword Controller:", error);
+    return sendResponse(res, -1, "Lỗi server", "");
   }
 };
 

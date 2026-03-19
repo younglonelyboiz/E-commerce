@@ -5,10 +5,14 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ProductDetail from "../pages/ProductDetail";
 import CategoryPage from "../pages/CategoryPage";
+import CheckoutPage from "../pages/CheckoutPage";
+import OrderHistory from '../pages/OrderHistory';
+import Profile from "../pages/Profile"
 // Import các trang Admin
 import AdminLayout from "../layouts/AdminLayout"; // Bạn cần tạo layout này
 import AdminProduct from "../pages/AdminProduct";
 import AdminUsers from "../pages/AdminUsers";
+import AdminOrders from "../pages/AdminOrders";
 import UserDetail from "../pages/UserDetail";
 // import AdminDashboard from "../pages/AdminDashboard";
 import App from "../App";
@@ -25,7 +29,10 @@ export const router = createBrowserRouter([
             { path: "cart", element: <Cart /> },
             { path: "login", element: <Login /> },
             { path: "register", element: <Register /> },
-            { path: "category/:categoryId", element: <CategoryPage /> }
+            { path: "category/:categoryId", element: <CategoryPage /> },
+            { path: "checkout", element: <CheckoutPage /> },
+            { path: "order-history", element: <OrderHistory /> },
+            { path: "profile", element: <Profile /> }
         ]
     },
     // NHÁNH ADMIN (Quản lý hệ thống)
@@ -45,6 +52,10 @@ export const router = createBrowserRouter([
             {
                 path: "users",
                 element: <AdminUsers />,
+            },
+            {
+                path: "orders",
+                element: <AdminOrders />,
             },
             {
                 path: "user/:id",

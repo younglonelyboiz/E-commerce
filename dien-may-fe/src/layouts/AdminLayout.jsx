@@ -1,8 +1,18 @@
-import React from 'react';
-import { Outlet, Link, NavLink } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom';
 import './AdminLayout.scss';
+import { UserContext } from '../context/UserContext';
 
 const AdminLayout = () => {
+
+    const { logoutContext } = useContext(UserContext);
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logoutContext(); // Xóa context
+        navigate('/login'); // Chuyển hướng về trang login
+    };
+
     return (
         <div className="admin-container">
             {/* SIDEBAR BÊN TRÁI */}
@@ -41,6 +51,10 @@ const AdminLayout = () => {
                     <div className="admin-user-info">
                         <span className="me-2">Xin chào, Admin</span>
                         <i className="bi bi-person-circle fs-5"></i>
+
+                        <div className="logout-button" onClick={handleLogout} title='Đăng xuất'>
+                            <i className="bi bi-box-arrow-right ms-3 fs-5 text-danger"></i>
+                        </div>
                     </div>
                 </header>
 

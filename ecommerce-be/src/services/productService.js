@@ -43,7 +43,9 @@ const getProductsWithFilter = async (params) => {
     };
 
     // Khởi tạo điều kiện lọc
-    let whereCondition = {};
+    let whereCondition = {
+      quantity: { [Op.gt]: 0 }, // Chỉ hiển thị sản phẩm có tồn kho > 0 cho khách hàng
+    };
 
     // TRƯỜNG HỢP 1: Nếu có slug (Trang chi tiết), chỉ tìm duy nhất sản phẩm đó
     if (slug) {
@@ -110,6 +112,7 @@ const getTopSaleProducts = async () => {
       where: {
         discount_price: { [Op.lt]: db.sequelize.col("regular_price") },
         regular_price: { [Op.gt]: 0 },
+        quantity: { [Op.gt]: 0 }, // Ẩn sản phẩm hết hàng
       },
       include: [
         {
@@ -155,6 +158,9 @@ const getTopSellingProducts = async () => {
           "totalSold",
         ],
       ],
+      where: {
+        quantity: { [Op.gt]: 0 }, // Ẩn sản phẩm hết hàng
+      },
       include: [
         {
           model: db.order_products,
@@ -194,6 +200,7 @@ const getProductBySlug = async (productSlug) => {
       where: {
         slug: productSlug,
         status: "active", // Đảm bảo chỉ lấy sản phẩm đang kinh doanh
+        quantity: { [Op.gt]: 0 }, // Ẩn sản phẩm hết hàng
       },
       include: [
         {

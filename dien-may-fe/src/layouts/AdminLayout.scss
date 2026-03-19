@@ -62,6 +62,18 @@
             position: sticky;
             top: 0;
             z-index: 1000;
+
+            .admin-user-info {
+                display: flex;
+                align-items: center;
+
+                .logout-button {
+                    cursor: pointer;
+                    i:hover {
+                        opacity: 0.8;
+                    }
+                }
+            }
         }
 
         .admin-content {

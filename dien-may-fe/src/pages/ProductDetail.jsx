@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import CardProduct from '../components/CardProduct';
 import { getProducts } from "../services/product.api";
 import { addToCartApi } from '../services/cartService';
@@ -9,6 +9,7 @@ import './ProductDetail.scss';
 
 const ProductDetail = () => {
     const { slug } = useParams();
+    const navigate = useNavigate();
     const [product, setProduct] = useState(null);
     const [relatedProducts, setRelatedProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -74,8 +75,21 @@ const ProductDetail = () => {
     };
 
     const handleQuantity = (type) => {
-        if (type === 'plus') setQuantity(prev => prev + 1);
+        if (type === 'plus') setQuantity(prev => prev === '' ? 1 : prev + 1);
         else if (type === 'minus' && quantity > 1) setQuantity(prev => prev - 1);
+    };
+
+    const handleQuantityChange = (e) => {
+        const val = e.target.value;
+        if (val === '') setQuantity('');
+        else {
+            const num = parseInt(val, 10);
+            if (!isNaN(num) && num > 0) setQuantity(num);
+        }
+    };
+
+    const handleQuantityBlur = () => {
+        if (quantity === '' || quantity < 1) setQuantity(1);
     };
 
     // Hàm xử lý khi bấm nút "Thêm vào giỏ hàng"
@@ -101,6 +115,23 @@ const ProductDetail = () => {
         } catch (error) {
             toast.error("Lỗi hệ thống khi thêm vào giỏ!");
         }
+    };
+
+    // Hàm xử lý khi bấm nút "Mua Ngay"
+    const handleBuyNow = () => {
+        if (!user || user.auth === false) {
+            toast.warning("Vui lòng đăng nhập để mua hàng!");
+            navigate('/login');
+            return;
+        }
+        const itemToCheckout = {
+            product_id: product.id,
+            name: product.name,
+            price: product.discount_price > 0 ? product.discount_price : product.regular_price,
+            quantity: quantity,
+            image: activeImg || "https://via.placeholder.com/100"
+        };
+        navigate('/checkout', { state: { items: [itemToCheckout] } });
     };
 
     if (loading) return <div className="loading-state">Đang tải dữ liệu sản phẩm...</div>;
@@ -162,13 +193,19 @@ const ProductDetail = () => {
                         <p className="fw-bold mb-2">Số lượng:</p>
                         <div className="input-group" style={{ width: '120px' }}>
                             <button className="btn btn-outline-secondary" onClick={() => handleQuantity('minus')}>-</button>
-                            <input type="text" className="form-control text-center" value={quantity} readOnly />
+                            <input
+                                type="text"
+                                className="form-control text-center"
+                                value={quantity}
+                                onChange={handleQuantityChange}
+                                onBlur={handleQuantityBlur}
+                            />
                             <button className="btn btn-outline-secondary" onClick={() => handleQuantity('plus')}>+</button>
                         </div>
                     </div>
 
                     <div className="action-buttons d-grid gap-2">
-                        <button className="btn btn-danger btn-buy py-3" onClick={() => alert("Đã thêm vào giỏ!")}>
+                        <button className="btn btn-danger btn-buy py-3" onClick={handleBuyNow}>
                             MUA NGAY <br /> <small>Giao tận nơi hoặc nhận tại chỗ</small>
                         </button>
                         <button className="btn btn-outline-primary py-2" onClick={handleAddToCart}>

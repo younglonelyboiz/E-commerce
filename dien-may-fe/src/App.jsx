@@ -3,7 +3,8 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { useContext, useEffect } from "react";
 import { UserContext } from "./context/UserContext";
-import { getUserAccount } from "./services/userService"; // Dùng đúng tên hàm đã import
+import { getUserAccount } from "./services/userService";
+import OrderHistory from './pages/OrderHistory';
 
 function App() {
   // Lấy thêm setUser để tắt trạng thái loading khi API xong

@@ -32,3 +32,7 @@ export const fetchAllUserByAdmin = (page, limit, search, sortBy, sortOrder) => {
 export const readUserDetail = (id) => {
   return axios.get(`/admin/users/${id}`);
 };
+
+export const changePasswordApi = (oldPassword, newPassword) => {
+  return axios.put("/user/change-password", { oldPassword, newPassword });
+};

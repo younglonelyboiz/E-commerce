@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { getCartApi } from '../services/cartService';
 import { UserContext } from '../context/UserContext';
 
 function Cart() {
+    const navigate = useNavigate();
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useContext(UserContext);
@@ -33,6 +34,26 @@ function Cart() {
 
     const formatPrice = (price) => new Intl.NumberFormat('vi-VN').format(price);
 
+    // Xử lý thay đổi số lượng
+    const handleUpdateQuantity = (productId, value) => {
+        let newQuantity = value;
+        if (typeof value === 'string') {
+            if (value === '') newQuantity = '';
+            else {
+                newQuantity = parseInt(value, 10);
+                if (isNaN(newQuantity)) return;
+            }
+        } else if (value < 1) return;
+
+        setCartItems(prev => prev.map(item => item.product.id === productId ? { ...item, quantity: newQuantity } : item));
+    };
+
+    const handleBlurQuantity = (productId, currentQuantity) => {
+        if (currentQuantity === '' || currentQuantity < 1) {
+            setCartItems(prev => prev.map(item => item.product.id === productId ? { ...item, quantity: 1 } : item));
+        }
+    };
+
     // Xử lý khi tích/bỏ tích 1 sản phẩm
     const handleSelectItem = (id) => {
         setSelectedItems(prev =>
@@ -55,17 +76,32 @@ function Cart() {
     // Tính tổng tiền
     const totalPrice = selectedCartItems.reduce((sum, item) => {
         const price = item.product?.discount_price || 0;
-        return sum + (price * item.quantity);
+        return sum + (price * (item.quantity || 0));
     }, 0);
 
     // Tính toán thêm cho Tóm tắt đơn hàng thông minh
     const totalRegularPrice = selectedCartItems.reduce((sum, item) => {
         const price = item.product?.regular_price || item.product?.discount_price || 0;
-        return sum + (price * item.quantity);
+        return sum + (price * (item.quantity || 0));
     }, 0);
     const totalDiscount = totalRegularPrice - totalPrice;
     const shippingFee = selectedCartItems.length === 0 ? 0 : (totalPrice >= 500000 ? 0 : 30000); // Miễn phí giao hàng từ 500k, không chọn thì phí ship = 0
     const finalTotal = totalPrice + shippingFee;
+
+    // Xử lý ấn nút Đặt hàng
+    const handleCheckout = () => {
+        if (selectedItems.length === 0) return;
+
+        // Gom data sản phẩm đã tick đẩy sang trang Checkout
+        const itemsToCheckout = selectedCartItems.map(item => ({
+            product_id: item.product.id,
+            name: item.product.name,
+            price: item.product.discount_price || item.product.regular_price,
+            quantity: item.quantity,
+            image: item.product?.product_images?.[0]?.url || "https://via.placeholder.com/100"
+        }));
+        navigate('/checkout', { state: { items: itemsToCheckout } });
+    };
 
     if (loading) {
         return <div className="container mt-5 text-center"><div className="spinner-border text-primary"></div></div>;
@@ -138,7 +174,20 @@ function Cart() {
                                                 {product?.name}
                                             </Link>
                                             <div className="text-danger fw-bold mb-2">{formatPrice(price)}₫</div>
-                                            <div className="text-muted small">Số lượng: <strong>{item.quantity}</strong></div>
+                                            <div className="d-flex align-items-center">
+                                                <span className="text-muted small me-2">Số lượng:</span>
+                                                <div className="input-group input-group-sm" style={{ width: '100px' }}>
+                                                    <button className="btn btn-outline-secondary" onClick={() => handleUpdateQuantity(product.id, item.quantity - 1)}>-</button>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control text-center px-1"
+                                                        value={item.quantity}
+                                                        onChange={(e) => handleUpdateQuantity(product.id, e.target.value)}
+                                                        onBlur={() => handleBlurQuantity(product.id, item.quantity)}
+                                                    />
+                                                    <button className="btn btn-outline-secondary" onClick={() => handleUpdateQuantity(product.id, item.quantity === '' ? 1 : item.quantity + 1)}>+</button>
+                                                </div>
+                                            </div>
                                         </div>
                                         <button className="btn btn-link text-danger position-absolute top-50 end-0 translate-middle-y me-3" title="Xóa">
                                             <i className="bi bi-trash fs-5"></i>
@@ -182,6 +231,7 @@ function Cart() {
                             <button
                                 className="btn btn-danger w-100 py-2 fw-bold"
                                 disabled={selectedItems.length === 0}
+                                onClick={handleCheckout}
                             >
                                 TIẾN HÀNH ĐẶT HÀNG {selectedItems.length > 0 ? `(${selectedItems.length})` : ''}
                             </button>

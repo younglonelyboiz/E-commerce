@@ -145,7 +145,7 @@ export const getUserWithPagination = async (page, limit, filters) => {
         {
           model: db.roles,
           as: "roles",
-          attributes: ["name"],
+          attributes: ["id", "name"],
           through: { attributes: [] },
         },
       ],
@@ -168,5 +168,34 @@ export const getUserWithPagination = async (page, limit, filters) => {
   } catch (e) {
     console.log(">>> Error:", e);
     return { EM: "Lỗi service", EC: -1, DT: "" };
+  }
+};
+
+export const changePasswordService = async (
+  userId,
+  oldPassword,
+  newPassword,
+) => {
+  try {
+    const user = await db.users.findOne({ where: { id: userId } });
+    if (!user) {
+      return { EC: 1, EM: "Người dùng không tồn tại!", DT: "" };
+    }
+
+    const isCorrectPassword = await brcypt.compare(
+      oldPassword,
+      user.password_hash,
+    );
+    if (!isCorrectPassword) {
+      return { EC: 1, EM: "Mật khẩu hiện tại không chính xác!", DT: "" };
+    }
+
+    const hashedPassword = await brcypt.hash(newPassword, salt);
+    await user.update({ password_hash: hashedPassword });
+
+    return { EC: 0, EM: "Đổi mật khẩu thành công!", DT: "" };
+  } catch (error) {
+    console.error(">>> Error in changePasswordService:", error);
+    return { EC: -1, EM: "Lỗi hệ thống", DT: "" };
   }
 };

@@ -22,11 +22,26 @@ import {
   handleLogout,
   readUsersAdmin,
   readUserDetail,
+  changePassword, // Thêm controller xử lý đổi mật khẩu
 } from "../controllers/userController.js";
 
 import { readAllRoles, updateRole } from "../controllers/roleController.js";
 
 import { addToCart, getCart } from "../controllers/cartController.js";
+import {
+  getUserAddresses,
+  addUserAddress,
+  updateUserAddress,
+  deleteUserAddress,
+} from "../controllers/addressController.js";
+import {
+  createOrder,
+  readAllOrders,
+  readOrderDetail,
+  changeOrderStatus,
+  readOrdersByUser,
+  cancelOrderByUser,
+} from "../controllers/orderController.js";
 
 const initApiRoutes = (app) => {
   const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
@@ -54,6 +69,21 @@ const initApiRoutes = (app) => {
   router.get("/admin/users", checkUserJWT, checkAdminRole, readUsersAdmin);
   router.get("/admin/users/:id", checkUserJWT, checkAdminRole, readUserDetail);
 
+  // --- Routes Quản lý đơn hàng (Admin) ---
+  router.get("/admin/orders", checkUserJWT, checkAdminRole, readAllOrders);
+  router.get(
+    "/admin/orders/:id",
+    checkUserJWT,
+    checkAdminRole,
+    readOrderDetail,
+  );
+  router.put(
+    "/admin/orders/:id/status",
+    checkUserJWT,
+    checkAdminRole,
+    changeOrderStatus,
+  );
+
   router.get("/products", readProducts);
   router.get("/products/:id", getProductDetail);
 
@@ -71,10 +101,22 @@ const initApiRoutes = (app) => {
   router.post("/cart/add", checkUserJWT, addToCart);
   router.get("/cart", checkUserJWT, getCart);
 
+  // --- Routes Sổ địa chỉ ---
+  router.get("/user/addresses", checkUserJWT, getUserAddresses);
+  router.post("/user/addresses", checkUserJWT, addUserAddress);
+  router.put("/user/addresses/:id", checkUserJWT, updateUserAddress);
+  router.delete("/user/addresses/:id", checkUserJWT, deleteUserAddress);
+
+  // --- Routes Đặt hàng ---
+  router.post("/order/create", checkUserJWT, createOrder);
+  router.get("/user/orders", checkUserJWT, readOrdersByUser);
+  router.put("/user/orders/:id/cancel", checkUserJWT, cancelOrderByUser);
+
   router.get("/account", checkUserJWT, getUserAccount);
   router.post("/login", handleLogin);
   router.post("/register-user", registerNewUser); // Route kiểm tra JWT
   router.post("/logout", checkUserJWT, handleLogout);
+  router.put("/user/change-password", checkUserJWT, changePassword); // Endpoint đổi pass
 
   router.get("/user/profile", checkUserJWT, (req, res) => {
     return res.status(200).json({

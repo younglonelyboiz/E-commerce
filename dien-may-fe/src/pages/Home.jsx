@@ -126,9 +126,9 @@ function Home() {
                         <h2 className="section-title text-danger">
                             <i className="bi bi-lightning-fill"></i> FLASH SALE
                         </h2>
-                        <Link to="/flash-sale" className="view-all text-decoration-none">
+                        {/* <Link to="/flash-sale" className="view-all text-decoration-none">
                             Xem tất cả <i className="bi bi-chevron-right"></i>
-                        </Link>
+                        </Link> */}
                     </div>
                     <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
                         {flashSaleList && flashSaleList.length > 0 ? (
@@ -149,9 +149,9 @@ function Home() {
                         <h2 className="section-title text-warning-emphasis">
                             <i className="bi bi-fire text-danger"></i> TOP BÁN CHẠY
                         </h2>
-                        <Link to="/best-seller" className="view-all text-decoration-none">
+                        {/* <Link to="/best-seller" className="view-all text-decoration-none">
                             Xem tất cả <i className="bi bi-chevron-right"></i>
-                        </Link>
+                        </Link> */}
                     </div>
                     <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
                         {bestSellerList && bestSellerList.length > 0 ? (
@@ -181,9 +181,9 @@ function Home() {
                         <h2 className="section-title text-primary">
                             <i className="bi bi-stars text-warning"></i> GỢI Ý CHO BẠN
                         </h2>
-                        <Link to="/products" className="view-all text-decoration-none">
+                        {/* <Link to="/products" className="view-all text-decoration-none">
                             Xem tất cả <i className="bi bi-chevron-right"></i>
-                        </Link>
+                        </Link> */}
                     </div>
                     <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
                         {/* Ở đây bạn có thể dùng lại list bán chạy hoặc list khác tùy ý */}
