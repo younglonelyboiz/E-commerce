@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 import './AdminProduct.scss';
 import { ProductModal, ModalDelete } from '../components/ProductModal';
 import { UserContext } from '../context/UserContext';
+import ReactPaginate from 'react-paginate';
 
 const AdminProduct = () => {
     // 1. Lấy dữ liệu từ Context (Bao gồm cả trạng thái isLoading khi F5)
@@ -151,15 +152,8 @@ const AdminProduct = () => {
         }
     };
 
-    const getPagination = () => {
-        const pages = [];
-        const maxVisible = 5;
-        let start = Math.max(1, filters.page - 2);
-        let end = Math.min(totalPages, filters.page + 2);
-        if (filters.page <= 3) { start = 1; end = Math.min(maxVisible, totalPages); }
-        if (filters.page >= totalPages - 2) { start = Math.max(1, totalPages - maxVisible + 1); end = totalPages; }
-        for (let i = start; i <= end; i++) { pages.push(i); }
-        return pages;
+    const handlePageClick = (event) => {
+        handleUpdateFilter('page', +event.selected + 1);
     };
 
     // --- GIAO DIỆN CHỜ (HYDRATION) ---
@@ -323,25 +317,21 @@ const AdminProduct = () => {
             {/* Pagination */}
             <div className="d-flex justify-content-between align-items-center bg-white p-3 rounded-3 shadow-sm border-0">
                 <div className="text-muted small">Hiển thị trang <strong>{filters.page}</strong> trên tổng số <strong>{totalPages}</strong> trang</div>
-                <nav>
-                    <ul className="pagination mb-0">
-                        <li className={`page-item ${filters.page === 1 ? 'disabled' : ''}`}>
-                            <button className="page-link shadow-none" onClick={() => handleUpdateFilter('page', filters.page - 1)}>
-                                <i className="bi bi-chevron-left"></i>
-                            </button>
-                        </li>
-                        {getPagination().map(p => (
-                            <li key={p} className={`page-item ${filters.page === p ? 'active' : ''}`}>
-                                <button className="page-link shadow-none" onClick={() => handleUpdateFilter('page', p)}>{p}</button>
-                            </li>
-                        ))}
-                        <li className={`page-item ${filters.page === totalPages ? 'disabled' : ''}`}>
-                            <button className="page-link shadow-none" onClick={() => handleUpdateFilter('page', filters.page + 1)}>
-                                <i className="bi bi-chevron-right"></i>
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
+                <ReactPaginate
+                    nextLabel=">"
+                    onPageChange={handlePageClick}
+                    pageCount={totalPages}
+                    previousLabel="<"
+                    pageClassName="page-item"
+                    pageLinkClassName="page-link"
+                    previousClassName="page-item"
+                    previousLinkClassName="page-link"
+                    nextClassName="page-item"
+                    nextLinkClassName="page-link"
+                    containerClassName="pagination pagination-sm mb-0"
+                    activeClassName="active"
+                    forcePage={filters.page - 1}
+                />
             </div>
 
             {/* Modals */}

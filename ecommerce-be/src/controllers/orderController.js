@@ -21,8 +21,8 @@ export const createOrder = async (req, res) => {
 
 export const readAllOrders = async (req, res) => {
   try {
-    const { page, limit, status } = req.query;
-    let result = await getAllOrdersService(page, limit, status);
+    const { page, limit, status, payment_status } = req.query;
+    let result = await getAllOrdersService(page, limit, status, payment_status);
     return res.status(200).json(result);
   } catch (error) {
     console.error(">>> Lỗi ở readAllOrders:", error);
@@ -44,8 +44,13 @@ export const readOrderDetail = async (req, res) => {
 export const changeOrderStatus = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const { status, admin_note } = req.body;
-    let result = await updateOrderStatusService(orderId, status, admin_note);
+    const { status, admin_note, payment_status } = req.body;
+    let result = await updateOrderStatusService(
+      orderId,
+      status,
+      admin_note,
+      payment_status,
+    );
     return res.status(200).json(result);
   } catch (error) {
     console.error(">>> Lỗi ở changeOrderStatus:", error);

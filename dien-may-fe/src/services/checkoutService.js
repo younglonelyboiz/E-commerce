@@ -20,3 +20,14 @@ export const createOrderApi = (data) => {
   // data chứa: shipping_name, shipping_phone, shipping_address_snapshot, payment_method
   return axios.post("/order/create", data);
 };
+export const createPaymentLinkApi = (orderCode, amount, description) => {
+  return axios.post("/payment/create-link", {
+    orderCode,
+    amount,
+    description,
+  });
+};
+
+export const retryPaymentLinkApi = (orderId) => {
+  return axios.post("/payment/retry", { orderId });
+};

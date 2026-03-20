@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AddressModal from '../components/AddressModal';
-import { getUserAddressesApi, addUserAddressApi, updateUserAddressApi, createOrderApi } from '../services/checkoutService';
+import { getUserAddressesApi, addUserAddressApi, updateUserAddressApi, createOrderApi, createPaymentLinkApi } from '../services/checkoutService';
 import { toast } from 'react-toastify';
 import { UserContext } from '../context/UserContext';
 import { getCartApi } from '../services/cartService';
+import { io } from 'socket.io-client';
 
 const CheckoutPage = () => {
     const navigate = useNavigate();
@@ -18,6 +19,13 @@ const CheckoutPage = () => {
     // Dữ liệu mẫu item: { product_id, name, price, quantity }
     const [checkoutItems, setCheckoutItems] = useState(location.state?.items || []);
     const [customerNote, setCustomerNote] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('COD');
+
+    // State cho thanh toán PayOS
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [qrData, setQrData] = useState(null);
+    const [socket, setSocket] = useState(null);
+    const [currentOrderCode, setCurrentOrderCode] = useState('');
 
     // Tính tổng tiền
     const provisionalTotal = checkoutItems.reduce((sum, item) => sum + (item.price * (item.quantity || 0)), 0);
@@ -104,6 +112,41 @@ const CheckoutPage = () => {
         }
     };
 
+    // Dọn dẹp socket khi đóng Component
+    useEffect(() => {
+        return () => {
+            if (socket) socket.disconnect();
+        };
+    }, [socket]);
+
+    const setupSocketForPayment = (orderCode) => {
+        const newSocket = io("http://localhost:8080"); // Đảm bảo gọi đúng port của Backend
+
+        newSocket.on("connect", () => {
+            newSocket.emit("join_order", orderCode);
+        });
+
+        newSocket.on("payment_status", (data) => {
+            if (data.success) {
+                setShowQRModal(false);
+                toast.success("Thanh toán thành công! Cảm ơn bạn.");
+
+                try {
+                    getCartApi().then(cartRes => {
+                        if (cartRes && cartRes.EC === 0) {
+                            const newCount = (cartRes.DT || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+                            setCartCount(newCount);
+                        }
+                    });
+                } catch (error) { }
+
+                navigate('/order-history');
+                newSocket.disconnect();
+            }
+        });
+        setSocket(newSocket);
+    };
+
     // 3. Xử lý Nút Đặt hàng
     const handlePlaceOrder = async () => {
         if (!selectedAddress) {
@@ -117,7 +160,7 @@ const CheckoutPage = () => {
             shipping_name: selectedAddress.receiver_name,
             shipping_phone: selectedAddress.phone,
             shipping_address_snapshot: snapshot,
-            payment_method: "COD",
+            payment_method: paymentMethod,
             customer_note: customerNote,
             // Truyền mảng sản phẩm cần mua xuống Backend
             items: checkoutItems.map(item => ({
@@ -129,19 +172,38 @@ const CheckoutPage = () => {
         try {
             const res = await createOrderApi(orderPayload);
             if (res && res.EC === 0) {
-                toast.success("Đặt hàng thành công!");
+                const orderData = res.DT; // Data đơn hàng vừa tạo ở Backend
 
-                // Đồng bộ lại số lượng trên Icon Giỏ Hàng
-                try {
-                    const cartRes = await getCartApi();
-                    if (cartRes && cartRes.EC === 0) {
-                        const newCount = (cartRes.DT || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
-                        setCartCount(newCount);
+                // Nếu chọn chuyển khoản, ở bước tiếp theo chúng ta sẽ xử lý hiện QR Code tại đây
+                if (paymentMethod === 'BANK') {
+                    toast.info("Đang tạo mã QR thanh toán...");
+                    setCurrentOrderCode(orderData.code);
+
+                    // Gọi API sinh Link thanh toán bằng PayOS
+                    const payosRes = await createPaymentLinkApi(orderData.code, provisionalTotal, "Thanh toan don hang");
+                    if (payosRes && payosRes.EC === 0) {
+                        // DT của PayOS trả về chứa field qrCode dạng chuỗi (String)
+                        setQrData(payosRes.DT.qrCode);
+                        setShowQRModal(true);
+                        setupSocketForPayment(orderData.code);
+                    } else {
+                        toast.error("Không thể tạo mã QR thanh toán!");
                     }
-                } catch (error) { }
+                } else {
+                    toast.success("Đặt hàng thành công!");
 
-                // Sau khi đặt thành công, tự động chuyển người dùng sang trang Lịch sử đơn hàng
-                navigate('/order-history');
+                    // Đồng bộ lại số lượng trên Icon Giỏ Hàng
+                    try {
+                        const cartRes = await getCartApi();
+                        if (cartRes && cartRes.EC === 0) {
+                            const newCount = (cartRes.DT || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
+                            setCartCount(newCount);
+                        }
+                    } catch (error) { }
+
+                    // Sau khi đặt thành công, tự động chuyển người dùng sang trang Lịch sử đơn hàng
+                    navigate('/order-history');
+                }
             } else {
                 toast.error(res?.EM || "Đặt hàng thất bại");
             }
@@ -191,6 +253,23 @@ const CheckoutPage = () => {
                                 value={customerNote}
                                 onChange={(e) => setCustomerNote(e.target.value)}
                             ></textarea>
+                        </div>
+                    </div>
+
+                    {/* Block Phương thức thanh toán */}
+                    <div className="card shadow-sm border-0 mb-3">
+                        <div className="card-header bg-white border-bottom-0 pt-3">
+                            <h5 className="mb-0 text-dark"><i className="fas fa-credit-card me-2"></i> Phương thức thanh toán</h5>
+                        </div>
+                        <div className="card-body pt-1">
+                            <div className="form-check mb-2">
+                                <input className="form-check-input" type="radio" name="paymentMethod" id="cod" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                                <label className="form-check-label" htmlFor="cod">Thanh toán khi nhận hàng (COD)</label>
+                            </div>
+                            <div className="form-check">
+                                <input className="form-check-input" type="radio" name="paymentMethod" id="bank" value="BANK" checked={paymentMethod === 'BANK'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                                <label className="form-check-label" htmlFor="bank">Chuyển khoản qua mã QR</label>
+                            </div>
                         </div>
                     </div>
 
@@ -251,6 +330,35 @@ const CheckoutPage = () => {
                     onAddNewAddress={handleAddNewAddress}
                     onUpdateAddress={handleUpdateAddress}
                 />
+            )}
+
+            {/* Modal Quét QR Code PayOS Thanh toán */}
+            {showQRModal && (
+                <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg">
+                            <div className="modal-header bg-light border-bottom-0 pb-0">
+                                <h5 className="modal-title fw-bold text-primary">Thanh toán đơn hàng: <span className="text-dark">{currentOrderCode}</span></h5>
+                                <button type="button" className="btn-close" onClick={() => { setShowQRModal(false); if (socket) socket.disconnect(); navigate('/order-history'); }}></button>
+                            </div>
+                            <div className="modal-body text-center pt-2 pb-5">
+                                <p className="text-muted mb-4">Vui lòng quét mã QR dưới đây bằng ứng dụng ngân hàng</p>
+                                <div className="bg-white p-3 d-inline-block rounded-3 border shadow-sm mb-4">
+                                    {qrData ? (
+                                        // Encode chuỗi qrCode của PayOS và dùng API sinh QR image miễn phí
+                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData)}`} alt="PayOS QR Code" style={{ width: '220px', height: '220px' }} />
+                                    ) : (
+                                        <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }}></div>
+                                    )}
+                                </div>
+                                <div className="d-flex align-items-center justify-content-center text-primary fw-bold">
+                                    <div className="spinner-grow spinner-grow-sm me-2" role="status"></div>
+                                    Hệ thống đang chờ tín hiệu thanh toán...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

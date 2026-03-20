@@ -70,7 +70,7 @@ export const createOrderService = async (userId, data) => {
     // 2. Tạo bản ghi đơn hàng
     const newOrder = await db.orders.create(
       {
-        code: `ORD-${Date.now()}`,
+        code: `ORD${Date.now()}`,
         user_id: userId,
         grand_total: totalAmount,
         order_date: new Date(),
@@ -124,6 +124,7 @@ export const getAllOrdersService = async (
   page = 1,
   limit = 10,
   status = null,
+  paymentStatus = null,
 ) => {
   try {
     let offset = (page - 1) * limit;
@@ -131,6 +132,9 @@ export const getAllOrdersService = async (
 
     if (status) {
       whereCondition.order_status = status;
+    }
+    if (paymentStatus) {
+      whereCondition.payment_status = paymentStatus;
     }
 
     const { count, rows } = await db.orders.findAndCountAll({
@@ -174,6 +178,7 @@ export const updateOrderStatusService = async (
   orderId,
   newStatus,
   adminNote,
+  newPaymentStatus,
 ) => {
   const transaction = await db.sequelize.transaction();
   try {
@@ -184,7 +189,11 @@ export const updateOrderStatusService = async (
     if (!order) throw new Error("Đơn hàng không tồn tại");
 
     // LOGIC HOÀN KHO: Nếu đơn bị hủy và trạng thái cũ chưa phải là Hủy
-    if (newStatus === "cancelled" && order.order_status !== "cancelled") {
+    if (
+      newStatus &&
+      newStatus === "cancelled" &&
+      order.order_status !== "cancelled"
+    ) {
       const orderItems = await db.order_products.findAll({
         where: { order_id: orderId },
         transaction,
@@ -198,10 +207,13 @@ export const updateOrderStatusService = async (
       }
     }
 
-    await order.update(
-      { order_status: newStatus, admin_note: adminNote || order.admin_note },
-      { transaction },
-    );
+    const updateData = {
+      order_status: newStatus || order.order_status,
+      admin_note: adminNote !== undefined ? adminNote : order.admin_note,
+    };
+    if (newPaymentStatus) updateData.payment_status = newPaymentStatus;
+
+    await order.update(updateData, { transaction });
     await transaction.commit();
     return { EC: 0, EM: "Cập nhật trạng thái thành công", DT: "" };
   } catch (error) {

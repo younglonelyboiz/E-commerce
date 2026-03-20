@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAllOrders, fetchOrderDetail, updateOrderStatus } from '../services/adminOrderService';
 import { toast } from 'react-toastify';
+import ReactPaginate from 'react-paginate';
 
 const AdminOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -8,11 +9,13 @@ const AdminOrders = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [filterStatus, setFilterStatus] = useState('');
+    const [filterPaymentStatus, setFilterPaymentStatus] = useState('');
 
     // State cho Modal chi tiết
     const [showModal, setShowModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [newStatus, setNewStatus] = useState('');
+    const [newPaymentStatus, setNewPaymentStatus] = useState('');
     const [adminNote, setAdminNote] = useState('');
 
     const limit = 10;
@@ -30,12 +33,12 @@ const AdminOrders = () => {
 
     useEffect(() => {
         loadOrders();
-    }, [page, filterStatus]);
+    }, [page, filterStatus, filterPaymentStatus]);
 
     const loadOrders = async () => {
         setLoading(true);
         try {
-            const res = await fetchAllOrders(page, limit, filterStatus);
+            const res = await fetchAllOrders(page, limit, filterStatus, filterPaymentStatus);
             if (res && res.EC === 0) {
                 setOrders(res.DT.orders);
                 setTotalPages(res.DT.totalPages);
@@ -52,6 +55,7 @@ const AdminOrders = () => {
             if (res && res.EC === 0) {
                 setSelectedOrder(res.DT);
                 setNewStatus(res.DT.order_status);
+                setNewPaymentStatus(res.DT.payment_status || 'pending');
                 setAdminNote(res.DT.admin_note || '');
                 setShowModal(true);
             }
@@ -65,7 +69,7 @@ const AdminOrders = () => {
             return;
         }
         try {
-            const res = await updateOrderStatus(selectedOrder.id, newStatus, adminNote);
+            const res = await updateOrderStatus(selectedOrder.id, newStatus, adminNote, newPaymentStatus);
             if (res && res.EC === 0) {
                 toast.success("Cập nhật đơn hàng thành công!");
                 setShowModal(false);
@@ -76,6 +80,10 @@ const AdminOrders = () => {
         } catch (error) {
             toast.error("Lỗi hệ thống khi cập nhật");
         }
+    };
+
+    const handlePageClick = (event) => {
+        setPage(+event.selected + 1);
     };
 
     return (
@@ -91,6 +99,11 @@ const AdminOrders = () => {
                         {statusOptions.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
+                    </select>
+                    <select className="form-select w-auto" value={filterPaymentStatus} onChange={(e) => { setFilterPaymentStatus(e.target.value); setPage(1); }}>
+                        <option value="">Tất cả thanh toán</option>
+                        <option value="pending">Chưa thanh toán</option>
+                        <option value="paid">Đã thanh toán</option>
                     </select>
                     <button className="btn btn-primary ms-auto" onClick={loadOrders}>
                         <i className="bi bi-arrow-clockwise me-2"></i>Làm mới
@@ -126,7 +139,14 @@ const AdminOrders = () => {
                                         </td>
                                         <td>{new Date(order.order_date).toLocaleString('vi-VN')}</td>
                                         <td className="fw-bold text-danger">{Number(order.grand_total).toLocaleString('vi-VN')}đ</td>
-                                        <td>{order.payment_method === 'COD' ? 'Thanh toán khi nhận hàng' : order.payment_method}</td>
+                                        <td>
+                                            <div className="mb-1">{order.payment_method === 'COD' ? 'Thanh toán khi nhận hàng' : order.payment_method}</div>
+                                            {order.payment_status === 'paid' ? (
+                                                <span className="badge bg-success small">Đã thanh toán</span>
+                                            ) : (
+                                                <span className="badge bg-warning text-dark small">Chưa thanh toán</span>
+                                            )}
+                                        </td>
                                         <td><span className={`badge ${getStatusColor(order.order_status)}`}>{getStatusLabel(order.order_status)}</span></td>
                                         <td className="text-center">
                                             <button className="btn btn-sm btn-outline-info" onClick={() => handleViewDetail(order.id)}>
@@ -146,9 +166,21 @@ const AdminOrders = () => {
             {/* Phân trang */}
             {totalPages > 1 && (
                 <div className="d-flex justify-content-center mt-4">
-                    <button className="btn btn-outline-primary me-2" disabled={page <= 1} onClick={() => setPage(page - 1)}>Trước</button>
-                    <span className="btn btn-light disabled">Trang {page} / {totalPages}</span>
-                    <button className="btn btn-outline-primary ms-2" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Sau</button>
+                    <ReactPaginate
+                        nextLabel=">"
+                        onPageChange={handlePageClick}
+                        pageCount={totalPages}
+                        previousLabel="<"
+                        pageClassName="page-item"
+                        pageLinkClassName="page-link"
+                        previousClassName="page-item"
+                        previousLinkClassName="page-link"
+                        nextClassName="page-item"
+                        nextLinkClassName="page-link"
+                        containerClassName="pagination pagination-sm mb-0"
+                        activeClassName="active"
+                        forcePage={page - 1}
+                    />
                 </div>
             )}
 
@@ -178,6 +210,13 @@ const AdminOrders = () => {
                                                 {statusOptions.map(opt => (
                                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                                 ))}
+                                            </select>
+                                        </div>
+                                        <div className="mb-2">
+                                            <label className="form-label small fw-bold">Trạng thái thanh toán:</label>
+                                            <select className="form-select" value={newPaymentStatus} onChange={e => setNewPaymentStatus(e.target.value)}>
+                                                <option value="pending">Chưa thanh toán</option>
+                                                <option value="paid">Đã thanh toán</option>
                                             </select>
                                         </div>
                                         <div>

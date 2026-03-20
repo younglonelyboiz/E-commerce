@@ -42,6 +42,11 @@ import {
   readOrdersByUser,
   cancelOrderByUser,
 } from "../controllers/orderController.js";
+import {
+  createPaymentLink,
+  handlePayosWebhook,
+  retryPaymentLink,
+} from "../controllers/paymentController.js";
 
 const initApiRoutes = (app) => {
   const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
@@ -111,6 +116,11 @@ const initApiRoutes = (app) => {
   router.post("/order/create", checkUserJWT, createOrder);
   router.get("/user/orders", checkUserJWT, readOrdersByUser);
   router.put("/user/orders/:id/cancel", checkUserJWT, cancelOrderByUser);
+
+  // --- Routes Thanh toán PayOS ---
+  router.post("/payment/webhook", handlePayosWebhook);
+  router.post("/payment/create-link", checkUserJWT, createPaymentLink);
+  router.post("/payment/retry", checkUserJWT, retryPaymentLink);
 
   router.get("/account", checkUserJWT, getUserAccount);
   router.post("/login", handleLogin);

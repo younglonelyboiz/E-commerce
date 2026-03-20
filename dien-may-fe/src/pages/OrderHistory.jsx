@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getUserOrdersApi, cancelUserOrderApi } from '../services/userOrderService';
 import { UserContext } from '../context/UserContext';
+import { retryPaymentLinkApi } from '../services/checkoutService';
+import { io } from 'socket.io-client';
 
 const OrderHistory = () => {
     const [orders, setOrders] = useState([]);
@@ -11,6 +13,12 @@ const OrderHistory = () => {
     const { user } = useContext(UserContext);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showModal, setShowModal] = useState(false);
+
+    // State cho việc hiển thị Modal Thanh toán lại
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [qrData, setQrData] = useState(null);
+    const [currentOrderCode, setCurrentOrderCode] = useState('');
+    const [socket, setSocket] = useState(null);
 
     const statusOptions = {
         'pending': { label: 'Chờ xác nhận', color: 'bg-warning text-dark' },
@@ -73,6 +81,51 @@ const OrderHistory = () => {
     const handleViewDetail = (order) => {
         setSelectedOrder(order);
         setShowModal(true);
+    };
+
+    // Dọn dẹp socket khi rời trang
+    useEffect(() => {
+        return () => {
+            if (socket) socket.disconnect();
+        };
+    }, [socket]);
+
+    const setupSocketForPayment = (orderCode) => {
+        const newSocket = io("http://localhost:8080"); // Đảm bảo gọi đúng port của Backend
+
+        newSocket.on("connect", () => {
+            newSocket.emit("join_order", orderCode);
+        });
+
+        newSocket.on("payment_status", (data) => {
+            if (data.success) {
+                setShowQRModal(false);
+                toast.success("Thanh toán thành công! Cảm ơn bạn.");
+                fetchUserOrders(); // Gọi lại API để load lại danh sách đơn đã đổi trạng thái
+                newSocket.disconnect();
+            }
+        });
+        setSocket(newSocket);
+    };
+
+    const handleRetryPayment = async (orderId) => {
+        toast.info("Đang khởi tạo lại mã QR...");
+        try {
+            const res = await retryPaymentLinkApi(orderId);
+            if (res && res.EC === 0) {
+                setQrData(res.DT.qrCode);
+                setCurrentOrderCode(res.DT.newOrderCode); // Lấy mã mới để socket lắng nghe đúng phòng
+                setShowQRModal(true);
+                setupSocketForPayment(res.DT.newOrderCode);
+
+                // Cập nhật lại mã đơn mới vào state để nếu khách tắt Modal mở lại vẫn đúng mã
+                setOrders(prev => prev.map(o => o.id === orderId ? { ...o, code: res.DT.newOrderCode } : o));
+            } else {
+                toast.error(res?.EM || "Không thể tải mã QR, vui lòng thử lại!");
+            }
+        } catch (error) {
+            toast.error("Lỗi khi tải mã QR!");
+        }
     };
 
     if (loading) {
@@ -155,6 +208,12 @@ const OrderHistory = () => {
                                         <button className="btn btn-sm btn-outline-primary" onClick={() => handleViewDetail(order)}>
                                             Xem chi tiết đơn hàng của bạn
                                         </button>
+                                        {/* Nút thanh toán lại */}
+                                        {order.payment_method === 'BANK' && order.payment_status === 'pending' && order.order_status !== 'cancelled' && (
+                                            <button className="btn btn-sm btn-warning ms-2 text-dark fw-bold" onClick={() => handleRetryPayment(order.id)}>
+                                                <i className="bi bi-qr-code me-1"></i> Thanh toán ngay
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="text-end">
                                         <span className="d-block small text-muted">Tổng tiền:</span>
@@ -221,6 +280,34 @@ const OrderHistory = () => {
                             </div>
                             <div className="modal-footer border-top-0 pt-0">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Đóng</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Quét QR Code PayOS Thanh toán lại */}
+            {showQRModal && (
+                <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg">
+                            <div className="modal-header bg-light border-bottom-0 pb-0">
+                                <h5 className="modal-title fw-bold text-primary">Thanh toán đơn hàng: <span className="text-dark">{currentOrderCode}</span></h5>
+                                <button type="button" className="btn-close" onClick={() => { setShowQRModal(false); if (socket) socket.disconnect(); }}></button>
+                            </div>
+                            <div className="modal-body text-center pt-2 pb-5">
+                                <p className="text-muted mb-4">Vui lòng quét mã QR dưới đây bằng ứng dụng ngân hàng</p>
+                                <div className="bg-white p-3 d-inline-block rounded-3 border shadow-sm mb-4">
+                                    {qrData ? (
+                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrData)}`} alt="PayOS QR Code" style={{ width: '220px', height: '220px' }} />
+                                    ) : (
+                                        <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }}></div>
+                                    )}
+                                </div>
+                                <div className="d-flex align-items-center justify-content-center text-primary fw-bold">
+                                    <div className="spinner-grow spinner-grow-sm me-2" role="status"></div>
+                                    Hệ thống đang chờ tín hiệu thanh toán...
+                                </div>
                             </div>
                         </div>
                     </div>
