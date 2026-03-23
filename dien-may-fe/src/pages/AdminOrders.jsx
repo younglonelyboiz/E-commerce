@@ -240,7 +240,20 @@ const AdminOrders = () => {
                                         <tbody>
                                             {selectedOrder.order_products?.map(item => (
                                                 <tr key={item.id}>
-                                                    <td>{item.name}</td>
+                                                    <td>
+                                                        <div className="d-flex align-items-center">
+                                                            {item.image ? (
+                                                                <img src={item.image} alt={item.name} style={{ width: '40px', height: '40px', objectFit: 'cover' }} className="rounded me-2 border" />
+                                                            ) : (
+                                                                <div className="bg-light rounded d-flex align-items-center justify-content-center me-2 border" style={{ width: '40px', height: '40px' }}>
+                                                                    <i className="bi bi-box-seam text-secondary small"></i>
+                                                                </div>
+                                                            )}
+                                                            <a href={`/product/${item.slug || item.product_id}`} target="_blank" rel="noopener noreferrer" className="text-decoration-none text-primary">
+                                                                {item.name}
+                                                            </a>
+                                                        </div>
+                                                    </td>
                                                     <td className="text-end">{Number(item.price).toLocaleString()}đ</td>
                                                     <td className="text-center">{item.quantity}</td>
                                                     <td className="text-end fw-bold text-danger">{Number(item.subtotal).toLocaleString()}đ</td>

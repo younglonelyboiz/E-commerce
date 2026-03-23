@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import { Op } from "sequelize";
 import db from "./models/index.js";
 import { updateOrderStatusService } from "./services/orderService.js";
+import initSocket from "./sockets/index.js";
 
 dotenv.config();
 
@@ -28,19 +29,9 @@ const io = new Server(server, {
 // 3. Nhúng biến `io` vào Express App để sử dụng ở mọi Controller (như paymentController)
 app.set("io", io);
 
-// 4. Lắng nghe các sự kiện kết nối Socket
-io.on("connection", (socket) => {
-  console.log("Client connected socket ID:", socket.id);
-
-  socket.on("join_order", (orderCode) => {
-    socket.join(orderCode);
-    console.log(` Socket [${socket.id}] joined room order: ${orderCode}`);
-  });
-
-  socket.on("disconnect", () => {
-    console.log(" Client disconnected:", socket.id);
-  });
-});
+// 4. Khởi tạo toàn bộ luồng sự kiện Socket (Chat, Payment...)
+// Truyền trực tiếp instance `io` sang thư mục sockets quản lý
+initSocket(io);
 
 // 5. Cronjob: Tự động hủy đơn quá 24h (Chạy ngầm mỗi 1 tiếng)
 setInterval(async () => {

@@ -13,6 +13,7 @@ import AdminLayout from "../layouts/AdminLayout"; // Bạn cần tạo layout n�
 import AdminProduct from "../pages/AdminProduct";
 import AdminUsers from "../pages/AdminUsers";
 import AdminOrders from "../pages/AdminOrders";
+import AdminReviews from "../pages/AdminReviews"; // Import trang quản lý review
 import UserDetail from "../pages/UserDetail";
 // import AdminDashboard from "../pages/AdminDashboard";
 import App from "../App";
@@ -56,6 +57,10 @@ export const router = createBrowserRouter([
             {
                 path: "orders",
                 element: <AdminOrders />,
+            },
+            {
+                path: "reviews",
+                element: <AdminReviews />,
             },
             {
                 path: "user/:id",

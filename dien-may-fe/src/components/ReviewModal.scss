@@ -1,0 +1,30 @@
+.review-modal {
+  .star-rating {
+    font-size: 2rem;
+    cursor: pointer;
+    color: #e4e5e9;
+    transition: color 0.2s;
+
+    &.active {
+      color: #ffc107; // Màu vàng
+    }
+    
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  .image-preview-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+
+    .image-preview {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+  }
+}

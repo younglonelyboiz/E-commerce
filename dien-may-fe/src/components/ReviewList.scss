@@ -1,0 +1,56 @@
+.review-list-container {
+  .star-gold {
+    color: #ffc107;
+  }
+  .star-gray {
+    color: #e4e5e9;
+  }
+
+  .filter-btn {
+    border-radius: 20px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    transition: all 0.2s;
+
+    &:hover {
+      border-color: #dc3545;
+      color: #dc3545;
+    }
+
+    &.active {
+      border-color: #dc3545;
+      background-color: #dc3545;
+      color: #fff;
+    }
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 50%;
+  }
+
+  // --- SKELETON LOADING EFFECTS ---
+  .skeleton {
+    background: #eee;
+    background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+    background-size: 200% 100%;
+    animation: 1.5s shine linear infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shine {
+    to {
+      background-position-x: -200%;
+    }
+  }
+}

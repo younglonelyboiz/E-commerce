@@ -48,6 +48,13 @@ import {
   retryPaymentLink,
 } from "../controllers/paymentController.js";
 
+import {
+  createReview,
+  getReviews,
+  getAllReviewsAdmin,
+  replyReview,
+} from "../controllers/reviewController.js";
+
 const initApiRoutes = (app) => {
   const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
 
@@ -89,6 +96,20 @@ const initApiRoutes = (app) => {
     changeOrderStatus,
   );
 
+  // --- Routes Quản lý Đánh giá (Admin) ---
+  router.get(
+    "/admin/reviews",
+    checkUserJWT,
+    checkAdminRole,
+    getAllReviewsAdmin,
+  );
+  router.put(
+    "/admin/reviews/:id/reply",
+    checkUserJWT,
+    checkAdminRole,
+    replyReview,
+  );
+
   router.get("/products", readProducts);
   router.get("/products/:id", getProductDetail);
 
@@ -121,6 +142,10 @@ const initApiRoutes = (app) => {
   router.post("/payment/webhook", handlePayosWebhook);
   router.post("/payment/create-link", checkUserJWT, createPaymentLink);
   router.post("/payment/retry", checkUserJWT, retryPaymentLink);
+
+  // route review
+  router.post("/review/create", checkUserJWT, createReview);
+  router.get("/review/list/:productId", getReviews); // API Public cho phép đọc đánh giá
 
   router.get("/account", checkUserJWT, getUserAccount);
   router.post("/login", handleLogin);

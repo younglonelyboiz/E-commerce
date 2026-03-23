@@ -33,6 +33,9 @@ const AdminLayout = () => {
                     <NavLink to="/admin/users" className="nav-item">
                         <i className="bi bi-people me-2"></i> Users
                     </NavLink>
+                    <NavLink to="/admin/reviews" className="nav-item">
+                        <i className="bi bi-star me-2"></i> Đánh giá
+                    </NavLink>
                 </nav>
                 <div className="sidebar-footer">
                     <Link to="/" className="nav-item text-warning">

@@ -5,6 +5,7 @@ import { getUserOrdersApi, cancelUserOrderApi } from '../services/userOrderServi
 import { UserContext } from '../context/UserContext';
 import { retryPaymentLinkApi } from '../services/checkoutService';
 import { io } from 'socket.io-client';
+import ReviewModal from '../components/ReviewModal';
 
 const OrderHistory = () => {
     const [orders, setOrders] = useState([]);
@@ -19,6 +20,10 @@ const OrderHistory = () => {
     const [qrData, setQrData] = useState(null);
     const [currentOrderCode, setCurrentOrderCode] = useState('');
     const [socket, setSocket] = useState(null);
+
+    // State cho Modal Đánh giá
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviewData, setReviewData] = useState({ orderId: null, product: null, review: null });
 
     const statusOptions = {
         'pending': { label: 'Chờ xác nhận', color: 'bg-warning text-dark' },
@@ -81,6 +86,11 @@ const OrderHistory = () => {
     const handleViewDetail = (order) => {
         setSelectedOrder(order);
         setShowModal(true);
+    };
+
+    const handleOpenReview = (orderId, product, review = null) => {
+        setReviewData({ orderId, product, review });
+        setShowReviewModal(true);
     };
 
     // Dọn dẹp socket khi rời trang
@@ -189,7 +199,46 @@ const OrderHistory = () => {
                                         <tbody>
                                             {order.order_products?.map(item => (
                                                 <tr key={item.id} className="border-bottom">
-                                                    <td className="fw-bold" style={{ width: '60%' }}>{item.name}</td>
+                                                    <td className="fw-bold" style={{ width: '60%' }}>
+                                                        <div className="d-flex align-items-center mb-2">
+                                                            {item.image ? (
+                                                                <img src={item.image} alt={item.name} style={{ width: '50px', height: '50px', objectFit: 'cover' }} className="rounded me-3 border" />
+                                                            ) : (
+                                                                <div className="bg-light rounded d-flex align-items-center justify-content-center me-3 border" style={{ width: '50px', height: '50px' }}>
+                                                                    <i className="bi bi-box-seam text-secondary"></i>
+                                                                </div>
+                                                            )}
+                                                            <Link to={`/product/${item.slug || item.product_id}`} className="text-decoration-none text-dark" onMouseEnter={(e) => e.target.style.color = "#0d6efd"} onMouseLeave={(e) => e.target.style.color = "inherit"}>
+                                                                {item.name}
+                                                            </Link>
+                                                        </div>
+                                                        {order.order_status === 'delivered' && (
+                                                            <div>
+                                                                {(() => {
+                                                                    // Kiểm tra xem sản phẩm trong đơn hàng này đã được đánh giá chưa
+                                                                    const existingReview = order.reviews?.find(r => r.product_id === item.product_id);
+                                                                    if (existingReview) {
+                                                                        return (
+                                                                            <button
+                                                                                className="btn btn-sm btn-outline-success"
+                                                                                onClick={() => handleOpenReview(order.id, item, existingReview)}
+                                                                            >
+                                                                                <i className="bi bi-check-circle me-1"></i> Xem đánh giá
+                                                                            </button>
+                                                                        );
+                                                                    }
+                                                                    return (
+                                                                        <button
+                                                                            className="btn btn-sm btn-outline-warning text-dark"
+                                                                            onClick={() => handleOpenReview(order.id, item)}
+                                                                        >
+                                                                            <i className="bi bi-star-fill text-warning me-1"></i> Đánh giá
+                                                                        </button>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                        )}
+                                                    </td>
                                                     <td className="text-center text-muted">x {item.quantity}</td>
                                                     <td className="text-end text-danger fw-bold">{Number(item.price).toLocaleString('vi-VN')}đ</td>
                                                 </tr>
@@ -265,7 +314,20 @@ const OrderHistory = () => {
                                         <tbody>
                                             {selectedOrder.order_products?.map(item => (
                                                 <tr key={item.id}>
-                                                    <td>{item.name}</td>
+                                                    <td>
+                                                        <div className="d-flex align-items-center">
+                                                            {item.image ? (
+                                                                <img src={item.image} alt={item.name} style={{ width: '40px', height: '40px', objectFit: 'cover' }} className="rounded me-2 border" />
+                                                            ) : (
+                                                                <div className="bg-light rounded d-flex align-items-center justify-content-center me-2 border" style={{ width: '40px', height: '40px' }}>
+                                                                    <i className="bi bi-box-seam text-secondary small"></i>
+                                                                </div>
+                                                            )}
+                                                            <Link to={`/product/${item.slug || item.product_id}`} className="text-decoration-none text-dark" onClick={() => setShowModal(false)} onMouseEnter={(e) => e.target.style.color = "#0d6efd"} onMouseLeave={(e) => e.target.style.color = "inherit"}>
+                                                                {item.name}
+                                                            </Link>
+                                                        </div>
+                                                    </td>
                                                     <td className="text-end">{Number(item.price).toLocaleString('vi-VN')}đ</td>
                                                     <td className="text-center">{item.quantity}</td>
                                                     <td className="text-end fw-bold text-danger">{Number(item.subtotal || (item.price * item.quantity)).toLocaleString('vi-VN')}đ</td>
@@ -312,6 +374,20 @@ const OrderHistory = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Modal Đánh giá sản phẩm */}
+            {showReviewModal && (
+                <ReviewModal
+                    show={showReviewModal}
+                    handleClose={() => setShowReviewModal(false)}
+                    orderId={reviewData.orderId}
+                    product={reviewData.product}
+                    existingReview={reviewData.review}
+                    onSuccess={() => {
+                        fetchUserOrders(); // Gọi lại API để nút lập tức chuyển sang "Xem đánh giá"
+                    }}
+                />
             )}
         </div>
     );

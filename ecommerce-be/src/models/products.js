@@ -64,6 +64,16 @@ export default class products extends Model {
           allowNull: true,
           defaultValue: "active",
         },
+        total_stars: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+          defaultValue: 0,
+        },
+        review_count: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+          defaultValue: 0,
+        },
       },
       {
         sequelize,

@@ -164,11 +164,40 @@ export const getOrderDetailService = async (orderId) => {
     const order = await db.orders.findOne({
       where: { id: orderId },
       include: [
-        { model: db.order_products, as: "order_products" }, // Lấy list sản phẩm mua
+        {
+          model: db.order_products,
+          as: "order_products",
+          // JOIN sang bảng products để lấy thông tin ảnh và slug
+          include: [
+            {
+              model: db.products,
+              as: "product",
+              attributes: ["id", "slug"],
+              include: [
+                {
+                  model: db.product_images,
+                  as: "product_images",
+                  where: { is_thumbnail: 1 },
+                  required: false,
+                  attributes: ["url"],
+                },
+              ],
+            },
+          ],
+        },
       ],
     });
     if (!order) return { EC: 1, EM: "Không tìm thấy đơn hàng", DT: "" };
-    return { EC: 0, EM: "Lấy chi tiết đơn hàng thành công", DT: order };
+
+    // Làm phẳng dữ liệu cho order_products dễ dùng ở Frontend
+    const o = order.get({ plain: true });
+    o.order_products = o.order_products.map((op) => ({
+      ...op,
+      image: op.product?.product_images?.[0]?.url || null,
+      slug: op.product?.slug || null,
+    }));
+
+    return { EC: 0, EM: "Lấy chi tiết đơn hàng thành công", DT: o };
   } catch (error) {
     return { EC: -1, EM: "Lỗi hệ thống", DT: "" };
   }
@@ -229,10 +258,49 @@ export const getOrdersByUserIdService = async (userId) => {
   try {
     const orders = await db.orders.findAll({
       where: { user_id: userId },
-      include: [{ model: db.order_products, as: "order_products" }],
+      include: [
+        {
+          model: db.order_products,
+          as: "order_products",
+          // JOIN sang bảng products để lấy thông tin ảnh
+          include: [
+            {
+              model: db.products,
+              as: "product", // Lưu ý: Nếu báo lỗi, bạn kiểm tra lại alias trong initModels.js nhé
+              attributes: ["id", "slug"],
+              include: [
+                {
+                  model: db.product_images,
+                  as: "product_images",
+                  where: { is_thumbnail: 1 },
+                  required: false,
+                  attributes: ["url"],
+                },
+              ],
+            },
+          ],
+        },
+        { model: db.reviews, as: "reviews" },
+      ],
       order: [["order_date", "DESC"]], // Đơn mới nhất lên đầu
     });
-    return { EC: 0, EM: "Lấy lịch sử đơn hàng thành công", DT: orders };
+
+    // Làm phẳng (Format) dữ liệu trả về để gán trực tiếp thuộc tính "image" cho FE dễ dùng
+    const formattedOrders = orders.map((order) => {
+      const o = order.get({ plain: true });
+      o.order_products = o.order_products.map((op) => ({
+        ...op,
+        image: op.product?.product_images?.[0]?.url || null, // Lấy url ảnh nếu có
+        slug: op.product?.slug || null,
+      }));
+      return o;
+    });
+
+    return {
+      EC: 0,
+      EM: "Lấy lịch sử đơn hàng thành công",
+      DT: formattedOrders,
+    };
   } catch (error) {
     console.error(">>> Lỗi getOrdersByUserIdService:", error);
     return { EC: -1, EM: "Lỗi hệ thống", DT: [] };

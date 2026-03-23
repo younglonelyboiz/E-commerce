@@ -6,6 +6,7 @@ import { addToCartApi } from '../services/cartService';
 import { UserContext } from '../context/UserContext'; // Import UserContext
 import { toast } from 'react-toastify';
 import './ProductDetail.scss';
+import ReviewList from '../components/ReviewList';
 
 const ProductDetail = () => {
     const { slug } = useParams();
@@ -260,6 +261,11 @@ const ProductDetail = () => {
                     </div>
                 </div>
             )}
+
+
+            {/* {đánh giá sản phẩm } */}
+            <ReviewList productId={product.id} />
+
         </div>
     );
 };
