@@ -5,6 +5,7 @@ import { useContext, useEffect } from "react";
 import { UserContext } from "./context/UserContext";
 import { getUserAccount } from "./services/userService";
 import OrderHistory from './pages/OrderHistory';
+import CustomerChat from "./components/CustomerChat";
 
 function App() {
   // Lấy thêm setUser để tắt trạng thái loading khi API xong
@@ -40,6 +41,7 @@ function App() {
         <Outlet />
       </main>
       <Footer />
+      <CustomerChat />
     </div>
   );
 }

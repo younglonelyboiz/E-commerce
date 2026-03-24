@@ -14,6 +14,7 @@ import AdminProduct from "../pages/AdminProduct";
 import AdminUsers from "../pages/AdminUsers";
 import AdminOrders from "../pages/AdminOrders";
 import AdminReviews from "../pages/AdminReviews"; // Import trang quản lý review
+import AdminChat from "../pages/AdminChat"; // Import trang Chat cho Admin
 import UserDetail from "../pages/UserDetail";
 // import AdminDashboard from "../pages/AdminDashboard";
 import App from "../App";
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
             {
                 path: "reviews",
                 element: <AdminReviews />,
+            },
+            {
+                path: "chat",
+                element: <AdminChat />,
             },
             {
                 path: "user/:id",

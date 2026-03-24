@@ -5,6 +5,7 @@ export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState({
+        id: "",
         email: "",
         userName: "",
         roles: [],
@@ -16,6 +17,7 @@ export const UserProvider = ({ children }) => {
 
     const loginContext = (userData) => {
         setUser({
+            id: userData?.id,
             email: userData?.email,
             userName: userData?.userName,
             roles: userData?.roles || [],
@@ -25,7 +27,7 @@ export const UserProvider = ({ children }) => {
     };
 
     const logoutContext = () => {
-        setUser({ email: "", userName: "", roles: [], auth: false, isLoading: false });
+        setUser({ id: "", email: "", userName: "", roles: [], auth: false, isLoading: false });
         setCartCount(0); // Reset số lượng về 0 khi đăng xuất
     };
 

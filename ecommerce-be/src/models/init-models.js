@@ -3,6 +3,7 @@ import _brands from "./brands.js";
 import _cart_products from "./cart_products.js";
 import _carts from "./carts.js";
 import _categories from "./categories.js";
+import _conversations from "./conversations.js";
 import _cc_transactions from "./cc_transactions.js";
 import _coupons from "./coupons.js";
 import _order_products from "./order_products.js";
@@ -10,6 +11,7 @@ import _order_statuses from "./order_statuses.js";
 import _orders from "./orders.js";
 import _permissions from "./permissions.js";
 import _product_images from "./product_images.js";
+import _messages from "./messages.js";
 import _products from "./products.js";
 import _reviews from "./reviews.js";
 import _role_permissions from "./role_permissions.js";
@@ -25,6 +27,7 @@ export default function initModels(sequelize) {
   const cart_products = _cart_products.init(sequelize, DataTypes);
   const carts = _carts.init(sequelize, DataTypes);
   const categories = _categories.init(sequelize, DataTypes);
+  const conversations = _conversations.init(sequelize, DataTypes);
   const cc_transactions = _cc_transactions.init(sequelize, DataTypes);
   const coupons = _coupons.init(sequelize, DataTypes);
   const order_products = _order_products.init(sequelize, DataTypes);
@@ -32,6 +35,7 @@ export default function initModels(sequelize) {
   const orders = _orders.init(sequelize, DataTypes);
   const permissions = _permissions.init(sequelize, DataTypes);
   const product_images = _product_images.init(sequelize, DataTypes);
+  const messages = _messages.init(sequelize, DataTypes);
   const products = _products.init(sequelize, DataTypes);
   const reviews = _reviews.init(sequelize, DataTypes);
   const role_permissions = _role_permissions.init(sequelize, DataTypes);
@@ -164,11 +168,43 @@ export default function initModels(sequelize) {
     foreignKey: "user_id",
   });
 
+  // 8. CHAT (CONVERSATIONS & MESSAGES)
+  conversations.belongsTo(users, { as: "customer", foreignKey: "user_id" });
+  users.hasMany(conversations, {
+    as: "customer_conversations",
+    foreignKey: "user_id",
+  });
+
+  conversations.belongsTo(users, { as: "assignee", foreignKey: "assignee_id" });
+  users.hasMany(conversations, {
+    as: "assigned_conversations",
+    foreignKey: "assignee_id",
+  });
+
+  messages.belongsTo(conversations, {
+    as: "conversation",
+    foreignKey: "conversation_id",
+  });
+  conversations.hasMany(messages, {
+    as: "messages",
+    foreignKey: "conversation_id",
+  });
+
+  messages.belongsTo(users, { as: "sender", foreignKey: "sender_id" });
+  users.hasMany(messages, { as: "messages", foreignKey: "sender_id" });
+
+  // Móc nối messages làm last_message vào bảng conversations nếu cần query kèm last message chi tiết
+  conversations.belongsTo(messages, {
+    as: "last_message",
+    foreignKey: "last_message_id",
+  });
+
   return {
     brands,
     cart_products,
     carts,
     categories,
+    conversations,
     cc_transactions,
     coupons,
     order_products,
@@ -176,6 +212,7 @@ export default function initModels(sequelize) {
     orders,
     permissions,
     product_images,
+    messages,
     products,
     reviews,
     role_permissions,

@@ -55,6 +55,13 @@ import {
   replyReview,
 } from "../controllers/reviewController.js";
 
+import {
+  getUnreadCount,
+  getConversations,
+  getMessages,
+  getUserMessages,
+} from "../controllers/chatController.js";
+
 const initApiRoutes = (app) => {
   const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
 
@@ -146,6 +153,22 @@ const initApiRoutes = (app) => {
   // route review
   router.post("/review/create", checkUserJWT, createReview);
   router.get("/review/list/:productId", getReviews); // API Public cho phép đọc đánh giá
+
+  // --- Routes Chat ---
+  router.get("/chat/unread-count", checkUserJWT, getUnreadCount);
+  router.get("/chat/user-messages", checkUserJWT, getUserMessages);
+  router.get(
+    "/chat/conversations",
+    checkUserJWT,
+    checkAdminRole,
+    getConversations,
+  );
+  router.get(
+    "/chat/conversations/:id/messages",
+    checkUserJWT,
+    checkAdminRole,
+    getMessages,
+  );
 
   router.get("/account", checkUserJWT, getUserAccount);
   router.post("/login", handleLogin);

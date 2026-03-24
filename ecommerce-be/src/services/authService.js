@@ -72,6 +72,7 @@ const loginUser = async (rawData) => {
       EC: 0,
       EM: "Đăng nhập thành công!",
       DT: {
+        id: payload.id,
         access_token: token,
         userName: payload.userName,
         roles: payload.roles,

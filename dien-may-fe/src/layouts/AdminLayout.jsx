@@ -36,6 +36,9 @@ const AdminLayout = () => {
                     <NavLink to="/admin/reviews" className="nav-item">
                         <i className="bi bi-star me-2"></i> Đánh giá
                     </NavLink>
+                    <NavLink to="/admin/chat" className="nav-item">
+                        <i className="bi bi-chat-dots me-2"></i> Tin nhắn
+                    </NavLink>
                 </nav>
                 <div className="sidebar-footer">
                     <Link to="/" className="nav-item text-warning">
