@@ -1,5 +1,8 @@
 import db from "../models/index.js";
 import { PayOS } from "@payos/node";
+import dotenv from "dotenv";
+
+dotenv.config(); // Nạp biến môi trường ngay lập tức để đảm bảo PayOS nhận được Key
 
 const payos = new PayOS({
   clientId: process.env.PAYOS_CLIENT_ID || "YOUR_CLIENT_ID",
@@ -68,11 +71,11 @@ const updatePaymentStatusService = async (orderCodeStr) => {
 
 const verifyWebhookDataService = (webhookBody) => {
   try {
-    // Hàm này sẽ throw error nếu chữ ký (signature) không khớp
+    // Sử dụng đúng tên hàm của thư viện @payos/node phiên bản hiện tại
     const data = payos.webhooks.verify(webhookBody);
     return { EC: 0, EM: "Xác thực webhook thành công", DT: data };
   } catch (error) {
-    console.error(">>> verifyWebhookDataService Error:", error);
+    console.error(">>> verifyWebhookDataService Error:", error.message);
     return { EC: -1, EM: "Lỗi xác thực chữ ký webhook PayOS", DT: "" };
   }
 };
@@ -81,6 +84,17 @@ const retryPaymentService = async (orderId) => {
   try {
     const order = await db.orders.findOne({ where: { id: orderId } });
     if (!order) return { EC: 1, EM: "Không tìm thấy đơn hàng", DT: "" };
+
+    // 1. Hủy link thanh toán cũ trên PayOS để vô hiệu hóa mã QR cũ
+    try {
+      const oldOrderNumber = Number(order.code.replace(/\D/g, ""));
+      await payos.cancelPaymentLink(
+        oldOrderNumber,
+        "Khách hàng yêu cầu tạo mã QR mới",
+      );
+    } catch (e) {
+      // Bỏ qua lỗi nếu link cũ chưa từng được tạo hoặc đã hết hạn từ trước
+    }
 
     // Đổi sang mã đơn mới để PayOS không báo lỗi trùng lặp "Đơn hàng đã tồn tại"
     const newOrderCodeStr = `ORD${Date.now()}`;

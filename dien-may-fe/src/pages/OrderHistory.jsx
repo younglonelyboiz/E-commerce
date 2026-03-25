@@ -101,7 +101,9 @@ const OrderHistory = () => {
     }, [socket]);
 
     const setupSocketForPayment = (orderCode) => {
-        const newSocket = io("http://localhost:8080"); // Đảm bảo gọi đúng port của Backend
+        const newSocket = io(import.meta.env.VITE_BACKEND_URL || "http://localhost:8080", {
+            withCredentials: true
+        });
 
         newSocket.on("connect", () => {
             newSocket.emit("join_order", orderCode);

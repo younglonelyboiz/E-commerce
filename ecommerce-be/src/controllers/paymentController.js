@@ -50,20 +50,34 @@ export const retryPaymentLink = async (req, res) => {
 };
 
 export const handlePayosWebhook = async (req, res) => {
+  console.log(">>> [WEBHOOK] PayOS vừa gọi đến hệ thống!");
   try {
     const webhookBody = req.body;
+    console.log(
+      ">>> [WEBHOOK] Data Payload:",
+      JSON.stringify(webhookBody, null, 2),
+    );
 
     // 1. Xác thực chữ ký Webhook bằng SDK của PayOS để đảm bảo an toàn
     const verifyResult = verifyWebhookDataService(webhookBody);
     if (verifyResult.EC !== 0) {
+      console.log(">>> [WEBHOOK] Xác thực chữ ký thất bại!");
       return res
         .status(400)
         .json({ success: false, message: "Xác thực webhook thất bại" });
     }
 
-    // 2. Kiểm tra mã thành công từ `webhookBody`
-    if (webhookBody && webhookBody.code === "00") {
-      // PayOS bọc data thật sự bên trong object `data` của webhookBody
+    // Lấy data đã được SDK verify (chính là webhookBody.data)
+    const paymentData = verifyResult.DT;
+
+    // 2. Kiểm tra giao dịch thành công
+    if (
+      paymentData &&
+      (paymentData.code === "00" ||
+        webhookBody.code === "00" ||
+        webhookBody.success === true)
+    ) {
+      // Đảm bảo luôn lấy chính xác mã đơn hàng nằm bên trong lõi data của PayOS
       const orderCodeStr = `ORD${webhookBody.data.orderCode}`;
       console.log(
         ">>> PayOS Webhook: Đã nhận thanh toán cho đơn hàng:",
