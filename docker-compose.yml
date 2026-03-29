@@ -3,8 +3,8 @@ services:
     image: mariadb:10.6
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: ecommerce
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
     ports:
       - "3307:3306"
     volumes:
@@ -12,23 +12,21 @@ services:
 
   backend:
     build: ./ecommerce-be
+    env_file: ./ecommerce-be/.env
     ports:
       - "8080:8080"
     volumes:
       - ./ecommerce-be:/app
       - /app/node_modules # Không để node_modules đè lên máy thật
+      - uploads_data:/app/public/uploads
     environment:
-      - PORT=8080
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASSWORD=root
-      - DB_NAME=e-commerce
       - FRONTEND_URL=http://localhost:5173
     depends_on:
       - db
 
   frontend:
     build: ./dien-may-fe
+    env_file: ./dien-may-fe/.env
     ports:
       - "5173:5173"
     volumes:
@@ -39,3 +37,4 @@ services:
 
 volumes:
   db_data:
+  uploads_data:
