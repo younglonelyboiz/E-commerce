@@ -64,12 +64,20 @@ instance.interceptors.response.use(
     } else {
       switch (status) {
         case 403:
+          console.error(
+            "Forbidden error:",
+            error.response?.data || error.message,
+          );
           toast.error("Bạn không có quyền thực hiện chức năng này.");
           break;
         case 404:
           toast.error("Không tìm thấy dữ liệu yêu cầu.");
           break;
         case 500:
+          console.error(
+            "Backend 500 error:",
+            error.response?.data || error.message,
+          ); // Log error details for debugging
           toast.error("Hệ thống đang gặp sự cố, vui lòng thử lại sau.");
           break;
         default:

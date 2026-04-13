@@ -1,7 +1,7 @@
 .main-header {
     position: sticky;
     top: -30px;       /* <--- Số âm để Topbar trôi qua, Navbar dính lại */
-    z-index: 1000;
+    z-index: 9999;
     width: 100%;
     background: #fff;
 }
@@ -125,6 +125,9 @@
         font-size: 14px;
     }
 }
+.auth-section{
+    z-index: 9999999;
+    position: relative}
 /* ===============================
    RESPONSIVE – NOTICEABLE CHANGE
    =============================== */

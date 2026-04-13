@@ -1,0 +1,156 @@
+dien-may-fe/
+├── .env
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package-lock.json
+├── package.json
+├── public/
+│   └── vite.svg
+├── README.md
+├── src/
+│   ├── App.css
+│   ├── App.jsx
+│   ├── assets/
+│   │   └── react.svg
+│   ├── components/
+│   │   ├── AddressModal.jsx
+│   │   ├── CardProduct.jsx
+│   │   ├── CardProduct.scss
+│   │   ├── CategoryMenu.jsx
+│   │   ├── CategoryMenu.scss
+│   │   ├── Footer.jsx
+│   │   ├── Footer.scss
+│   │   ├── Header.jsx
+│   │   ├── Header.scss
+│   │   ├── ModalRole.jsx
+│   │   ├── ModalRole.scss
+│   │   ├── ProductModal.jsx
+│   │   ├── ReviewModal.jsx
+│   │   └── ReviewModal.scss
+│   ├── context/
+│   │   └── UserContext.jsx
+│   ├── index.css
+│   ├── layouts/
+│   │   ├── AdminLayout.jsx
+│   │   └── AdminLayout.scss
+│   ├── main.jsx
+│   ├── pages/
+│   │   ├── AdminOrders.jsx
+│   │   ├── AdminProduct.jsx
+│   │   ├── AdminProduct.scss
+│   │   ├── AdminUsers.jsx
+│   │   ├── Cart.jsx
+│   │   ├── CategoryPage.jsx
+│   │   ├── CategoryPage.scss
+│   │   ├── Checkout.jsx
+│   │   ├── CheckoutPage.jsx
+│   │   ├── Home.jsx
+│   │   ├── Home.scss
+│   │   ├── Login.jsx
+│   │   ├── Login.scss
+│   │   ├── OrderHistory.jsx
+│   │   ├── ProductDetail.jsx
+│   │   ├── ProductDetail.scss
+│   │   ├── Profile.jsx
+│   │   ├── Register.jsx
+│   │   ├── Register.scss
+│   │   └── UserDetail.jsx
+│   ├── routes/
+│   │   ├── AdminRoute.jsx
+│   │   └── index.jsx
+│   ├── services/
+│   │   ├── adminOrderService.js
+│   │   ├── brandService.js
+│   │   ├── cartService.js
+│   │   ├── categoryService.js
+│   │   ├── checkoutService.js
+│   │   ├── product.api.js
+│   │   ├── reviewService.js
+│   │   ├── roleService.js
+│   │   ├── userOrderService.js
+│   │   └── userService.js
+│   └── setup/
+│       └── axios.js
+└── vite.config.js
+
+ecommerce-be/
+├── .env
+├── .gitignore
+├── .sequelizerc
+├── convert.js
+├── package-lock.json
+├── package.json
+├── src/
+│   ├── app.js
+│   ├── config/
+│   │   ├── config.json
+│   │   └── connectDB.js
+│   ├── controllers/
+│   │   ├── addressController.js
+│   │   ├── brandController.js
+│   │   ├── cartController.js
+│   │   ├── categoriesController.js
+│   │   ├── orderController.js
+│   │   ├── paymentController.js
+│   │   ├── productController.js
+│   │   ├── reviewController.js
+│   │   ├── roleController.js
+│   │   └── userController.js
+│   ├── middlewares/
+│   │   ├── JWTAction.js
+│   │   └── permission.middleware.js
+│   ├── migrations/
+│   │   ├── 20260126170805-create-users.cjs
+│   │   ├── 20260126171035-create-roles.cjs
+│   │   ├── 20260126171112-create-permissions.cjs
+│   │   ├── 20260126171157-create-user-roles.cjs
+│   │   ├── 20260126171215-create-role-permissions.cjs
+│   │   ├── 20260126223712-create-products.cjs
+│   │   ├── 20260126223741-create-product-images.cjs
+│   │   └── 20260127234209-create-brands.js
+│   ├── models/
+│   │   ├── brands.js
+│   │   ├── carts.js
+│   │   ├── cart_products.js
+│   │   ├── categories.js
+│   │   ├── cc_transactions.js
+│   │   ├── coupons.js
+│   │   ├── index.js
+│   │   ├── init-models.js
+│   │   ├── orders.js
+│   │   ├── order_products.js
+│   │   ├── order_statuses.js
+│   │   ├── permissions.js
+│   │   ├── products.js
+│   │   ├── product_images.js
+│   │   ├── reviews.js
+│   │   ├── roles.js
+│   │   ├── role_permissions.js
+│   │   ├── sequelizemeta.js
+│   │   ├── users.js
+│   │   ├── user_addresses.js
+│   │   └── user_roles.js
+│   ├── routes/
+│   │   └── api.js
+│   ├── seeders/
+│   │   ├── 20260126174522-init-rbac.cjs
+│   │   └── 20260126223955-demo-products.cjs
+│   ├── server.js
+│   ├── services/
+│   │   ├── addressService.js
+│   │   ├── authService.js
+│   │   ├── brandService.js
+│   │   ├── cartService.js
+│   │   ├── categoryService.js
+│   │   ├── orderService.js
+│   │   ├── paymentService.js
+│   │   ├── productService.js
+│   │   ├── reviewService.js
+│   │   ├── roleService.js
+│   │   └── userService.js
+│   ├── utils/
+│   │   └── apiResponse.js
+│   └── validations/
+│       └── authValidation.js
+└── README.md

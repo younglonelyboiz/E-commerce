@@ -159,10 +159,32 @@ export const takeOverConversationService = async (
 ) => {
   const transaction = await db.sequelize.transaction();
   try {
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    // Định nghĩa hằng số cho thời gian không hoạt động để dễ đọc và bảo trì
+    const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 phút
+    const tenMinutesAgo = new Date(Date.now() - INACTIVITY_TIMEOUT_MS);
+
+    // Debugging: Log current state before attempting takeover
+    const currentConversation = await db.conversations.findOne({
+      where: { id: conversationId },
+      attributes: ["id", "assignee_id", "last_message_at", "last_sender_type"],
+    });
+    console.log(
+      `[Takeover Debug] Attempting takeover for Conv ID: ${conversationId} by Admin ID: ${newAdminId}`,
+    );
+    console.log(
+      `[Takeover Debug] Current state:`,
+      currentConversation?.toJSON(),
+    );
+    console.log(`[Takeover Debug] Ten minutes ago:`, tenMinutesAgo);
+    console.log(
+      `[Takeover Debug] Is last_message_at < tenMinutesAgo?`,
+      currentConversation?.last_message_at < tenMinutesAgo,
+    );
 
     // ATOMIC UPDATE TAKE OVER
-    // Điều kiện: Đã có assignee, Không phải mình, Khách nhắn cuối, và Nhắn quá 10 phút trước
+    // Điều kiện: Đã có assignee, Không phải mình,
+    // VÀ (Tin nhắn cuối là của ADMIN VÀ > 10 phút trước)
+    // HOẶC (Tin nhắn cuối là của USER - nghĩa là Admin hiện tại chưa phản hồi)
     const [affectedRows] = await db.conversations.update(
       {
         assignee_id: newAdminId,
@@ -173,14 +195,25 @@ export const takeOverConversationService = async (
         where: {
           id: conversationId,
           assignee_id: { [Op.not]: null }, // Đã có người nhận
-          assignee_id: { [Op.ne]: newAdminId }, // Không phải mình
-          last_message_at: { [Op.lt]: tenMinutesAgo }, // Tin nhắn cuối > 10 phút trước
+          assignee_id: { [Op.ne]: newAdminId }, // Không phải Admin đang cố gắng tiếp quản
+          [Op.or]: [
+            {
+              last_sender_type: "ADMIN",
+              last_message_at: { [Op.lt]: tenMinutesAgo }, // Tin nhắn cuối của ADMIN > 10 phút trước
+            },
+            {
+              last_sender_type: "USER", // Nếu tin nhắn cuối là của USER, Admin hiện tại chưa phản hồi
+            },
+          ],
         },
         transaction,
       },
     );
 
     if (affectedRows === 0) {
+      console.log(
+        `[Takeover Debug] No rows affected for Conv ID: ${conversationId}. Conditions not met.`,
+      );
       throw new Error(
         "Không đủ điều kiện để tiếp quản (Hoặc đã có người khác tiếp quản)",
       );
@@ -208,7 +241,10 @@ export const takeOverConversationService = async (
     return {
       EC: 0,
       EM: "Tiếp quản thành công",
-      DT: { message: systemMessage, conversationId },
+      DT: {
+        message: systemMessage,
+        conversation: await db.conversations.findByPk(conversationId), // Trả về conversation đã cập nhật đầy đủ
+      },
     };
   } catch (error) {
     await transaction.rollback();

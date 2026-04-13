@@ -75,7 +75,7 @@ const Login = () => {
                 </div>
 
                 <div className="divider">
-                    <span>Hoặc đăng nhập bằng email</span>
+                    <span>Hoặc đăng nhập bằng bằng tài khoản đã được đăng kí</span>
                 </div>
 
                 <form onSubmit={handleSubmit} className="login-form">

@@ -19,6 +19,7 @@ services:
       - ./ecommerce-be:/app
       - /app/node_modules # Không để node_modules đè lên máy thật
       - uploads_data:/app/public/uploads
+    command: npm run dev
     environment:
       - FRONTEND_URL=http://localhost:5173
     depends_on:
@@ -34,6 +35,8 @@ services:
       - /app/node_modules
     depends_on:
       - backend
+    environment:
+      - CHOKIDAR_USEPOLLING=true # Bật chế độ polling cho file watcher để hot-reload hoạt động trên Docker
 
 volumes:
   db_data:

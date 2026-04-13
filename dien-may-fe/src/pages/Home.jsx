@@ -68,7 +68,7 @@ function Home() {
                 <div className="hero-section row mb-4">
                     <div className="col-lg-8 mb-3 mb-lg-0">
                         <div className="main-banner">
-                            <img src="https://cdn2.cellphones.com.vn/insecure/rs:fill:1036:450/q:100/plain/https://dashboard.cellphones.com.vn/storage/Home_Ver4(3).png" alt="Big Banner" />
+                            <img src="https://cdn2.cellphones.com.vn/insecure/rs:fill:1036:450/q:100/plain/https://dashboard.cellphones.com.vn/storage/oppo-find-n6-open-1.png" alt="Big Banner" />
                         </div>
                     </div>
                     <div className="col-lg-4 d-flex flex-column justify-content-between">
@@ -76,7 +76,7 @@ function Home() {
                             <img src="https://cdn2.cellphones.com.vn/insecure/rs:fill:1036:450/q:100/plain/https://dashboard.cellphones.com.vn/storage/samsung-galaxy-a07-5g-home-v6.png" alt="Sub 1" />
                         </div>
                         <div className="sub-banner">
-                            <img src="https://cdn2.cellphones.com.vn/insecure/rs:fill:1036:450/q:100/plain/https://dashboard.cellphones.com.vn/storage/fbgdgfdgd.png" alt="Sub 2" />
+                            <img src="https://cdn2.cellphones.com.vn/insecure/rs:fill:1036:450/q:100/plain/https://dashboard.cellphones.com.vn/storage/dien-thoai-xiaomi-redmi-a7-pro-home.png" alt="Sub 2" />
                         </div>
                     </div>
                 </div>

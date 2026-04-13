@@ -76,6 +76,14 @@ const AdminChat = () => {
             // Ai đó vừa rep khách hoặc Cướp cờ -> Đồng bộ UI chung
             newSocket.on("admin_reply_update", (data) => {
                 fetchConversations();
+                // Tối ưu hóa: Cập nhật trực tiếp trạng thái hội thoại thay vì fetch lại toàn bộ
+                setConversations(prev => prev.map(c => {
+                    if (c.id === data.conversation?.id) {
+                        // data.conversation giờ là đối tượng conversation đã cập nhật đầy đủ
+                        return { ...c, ...data.conversation, last_message: data.message };
+                    }
+                    return c;
+                }));
                 if (activeConvRef.current && activeConvRef.current.id === data.conversation?.id) {
                     setMessages(prev => [...prev, data.message]);
                 }
@@ -283,9 +291,13 @@ const AdminChat = () => {
                                     )}
 
                                     {/* Logic hiển thị Nút Tiếp quản: Đã có người nhận, không phải bản thân, và trôi qua 10 phút */}
+                                    {/* Điều kiện mới: Đã có người nhận, không phải bản thân, VÀ (Admin cuối cùng nhắn > 10 phút HOẶC Khách hàng nhắn cuối) */}
                                     {activeConv.assignee_id !== null &&
                                         activeConv.assignee_id !== (user.id || user.account?.id) &&
-                                        (new Date() - new Date(activeConv.last_message_at)) > 10 * 60 * 1000 && (
+                                        (
+                                            (activeConv.last_sender_type === 'ADMIN' && (new Date() - new Date(new Date(activeConv.last_message_at))) > 10 * 60 * 1000)
+                                            || (activeConv.last_sender_type === 'USER')
+                                        ) && (
                                             <button className="btn btn-sm btn-warning text-dark fw-bold" onClick={handleTakeOver}>
                                                 <i className="bi bi-lightning-charge me-1"></i>Tiếp quản
                                             </button>
@@ -350,7 +362,7 @@ const AdminChat = () => {
                                     </form>
                                 ) : (
                                     <div className="text-center text-danger small py-2 bg-light rounded border">
-                                        <i className="bi bi-lock-fill me-1"></i> Hội thoại này đang được hỗ trợ bởi <strong>{activeConv.assignee?.user_name}</strong>. Bạn chỉ được xem!
+                                        <i className="bi bi-lock-fill me-1"></i> Hội thoại này đang được hỗ trợ bởi <strong>{activeConv.assignee?.user_name}</strong>. Hoặc có thể tiếp quản nếu đủ điều kiện
                                     </div>
                                 )}
                             </div>

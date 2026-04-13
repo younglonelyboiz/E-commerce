@@ -57,13 +57,10 @@ const adminHandler = (io, socket) => {
     );
 
     if (res.EC === 0) {
-      if (userId) {
-        io.to(`customer_${userId}`).emit("receive_message", res.DT.message);
-      }
-      io.to("admin_group").emit("admin_reply_update", {
-        message: res.DT.message,
-        conversation: { id: conversationId, assignee_id: newAdminId },
-      });
+      // Gửi tin nhắn hệ thống về cho Khách hàng
+      io.to(`customer_${userId}`).emit("receive_message", res.DT.message);
+      // Cập nhật lại UI cho tất cả Admin đang online
+      io.to("admin_group").emit("admin_reply_update", res.DT); // res.DT giờ đã chứa { message, conversation }
     } else {
       socket.emit("admin_error", { message: res.EM });
     }

@@ -11,6 +11,7 @@ import initSocket from "./sockets/index.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 8080;
+const HOST = "0.0.0.0"; // Lắng nghe trên tất cả các giao diện mạng
 
 connection();
 
@@ -63,6 +64,6 @@ setInterval(async () => {
 }, 60 * 60 * 1000);
 
 // 6. Chạy ứng dụng bằng server.listen thay vì app.listen
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Server running at http://${HOST}:${PORT}`);
 });

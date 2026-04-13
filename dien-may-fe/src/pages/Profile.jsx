@@ -34,7 +34,7 @@ const Profile = () => {
         } catch (error) {
             console.error("Lỗi tải địa chỉ:", error);
         }
-    }; // <--- BẠN ĐÃ THIẾU DẤU ĐÓNG NGOẶC NÀY
+    };
 
     const handleAddNewAddress = async (newAddr) => {
         try {
