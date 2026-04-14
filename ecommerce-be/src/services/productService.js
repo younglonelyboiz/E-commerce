@@ -1,6 +1,7 @@
 import db from "../models/index.js";
 import { Op } from "sequelize";
 import slugify from "slugify";
+import { v2 as cloudinary } from "cloudinary";
 
 // Helper nội bộ: Phẳng hóa dữ liệu ảnh để lấy thumbnailUrl cho Frontend
 const formatProductThumbnail = (product) => {
@@ -261,16 +262,48 @@ const createNewProduct = async (data) => {
       { transaction: t },
     );
 
-    // 4. Lưu ảnh (Giữ nguyên logic cũ)
+    // 4. Lưu ảnh với dữ liệu Cloudinary
     if (data.images && data.images.length > 0) {
+      let thumbnailFound = false;
       const imageData = data.images
-        .filter((url) => url.trim() !== "")
-        .map((url, index) => ({
-          product_id: product.id,
-          url: url,
-          is_thumbnail: index === 0 ? 1 : 0,
-        }));
-      await db.product_images.bulkCreate(imageData, { transaction: t });
+        .map((img, index) => {
+          const url = typeof img === "string" ? img : img.url;
+          let pId = typeof img === "object" ? img.public_id : null;
+          let isThumb = 0;
+
+          if (data.thumbnailUrl && url === data.thumbnailUrl) isThumb = 1;
+          else if (
+            data.thumbnailIndex !== undefined &&
+            parseInt(data.thumbnailIndex) === index
+          )
+            isThumb = 1;
+          else if (
+            typeof img === "object" &&
+            (img.is_thumbnail == 1 || String(img.is_thumbnail) === "true")
+          )
+            isThumb = 1;
+
+          return {
+            product_id: product.id,
+            url: url,
+            public_id: pId || null,
+            is_thumbnail: isThumb,
+          };
+        })
+        .filter((record) => record.url);
+
+      if (imageData.length > 0) {
+        for (let record of imageData) {
+          if (record.is_thumbnail === 1) {
+            if (!thumbnailFound) thumbnailFound = true;
+            else record.is_thumbnail = 0;
+          }
+        }
+        if (!thumbnailFound) {
+          imageData[0].is_thumbnail = 1;
+        }
+        await db.product_images.bulkCreate(imageData, { transaction: t });
+      }
     }
 
     await t.commit();
@@ -278,6 +311,16 @@ const createNewProduct = async (data) => {
   } catch (error) {
     await t.rollback();
     console.error(">>> SERVICE ERROR:", error);
+
+    // Xóa ảnh rác vừa upload lên Cloudinary nếu DB báo lỗi
+    if (data.images && Array.isArray(data.images)) {
+      for (const img of data.images) {
+        if (img.public_id) {
+          await cloudinary.uploader.destroy(img.public_id).catch(() => {});
+        }
+      }
+    }
+
     return {
       EC: -1,
       EM:
@@ -288,8 +331,19 @@ const createNewProduct = async (data) => {
     };
   }
 };
+
 const deleteProduct = async (id) => {
   try {
+    // Lấy danh sách ảnh để dọn rác trên Cloudinary trước khi xóa sản phẩm
+    const images = await db.product_images.findAll({
+      where: { product_id: id },
+    });
+    for (const img of images) {
+      if (img.public_id) {
+        await cloudinary.uploader.destroy(img.public_id).catch(() => {});
+      }
+    }
+
     await db.products.destroy({ where: { id } });
     return { EC: 0, EM: "Delete success", DT: "" };
   } catch (e) {
@@ -298,8 +352,15 @@ const deleteProduct = async (id) => {
 };
 
 const updateProduct = async (id, data) => {
+  console.log(`\n=== [SERVICE] BẮT ĐẦU XỬ LÝ CẬP NHẬT ID: ${id} ===`);
+  console.log(
+    `>>> [Service] Dữ liệu nhận từ Controller:`,
+    JSON.stringify(data, null, 2),
+  );
+
   // 1. Khởi tạo Transaction (để rollback nếu một trong hai bảng lỗi)
   const transaction = await db.sequelize.transaction();
+  let imagesToDeleteFromCloudinary = [];
 
   try {
     // 2. Kiểm tra sản phẩm có tồn tại không
@@ -315,51 +376,144 @@ const updateProduct = async (id, data) => {
       };
     }
 
+    // Gom các trường dữ liệu cần thiết để update
+    const updateData = {
+      name: data.name,
+      sku: data.sku,
+      regular_price: data.regular_price,
+      discount_price: data.discount_price,
+      quantity: data.quantity,
+      brand_id: data.brand_id,
+      category_id: data.category_id,
+    };
+
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.slug !== undefined) updateData.slug = data.slug;
+    if (data.description !== undefined)
+      updateData.description = data.description; // Nếu DB có trường description
+
     // 3. Cập nhật thông tin bảng Product
-    await db.products.update(
-      {
-        name: data.name,
-        sku: data.sku,
-        regular_price: data.regular_price,
-        discount_price: data.discount_price,
-        quantity: data.quantity,
-        brand_id: data.brand_id,
-        category_id: data.category_id,
-        // Lấy ảnh đầu tiên làm ảnh đại diện (Thumbnail)
-        thumbnailUrl:
-          data.images && data.images.length > 0 ? data.images[0] : "",
-      },
-      {
-        where: { id: id },
-        transaction,
-      },
-    );
+    await db.products.update(updateData, {
+      where: { id: id },
+      transaction,
+    });
+    console.log(">>> [Service] Đã update bảng products (thông tin cơ bản).");
 
     // 4. Cập nhật bảng Hình ảnh (ProductImage)
     if (data.images && Array.isArray(data.images)) {
-      // A. Xóa toàn bộ ảnh cũ của sản phẩm này
+      console.log(
+        ">>> [Service] Phát hiện mảng data.images, bắt đầu xử lý hình ảnh...",
+      );
+
+      // A. Dọn rác Cloudinary: Tìm những ảnh cũ bị Admin xóa đi trong quá trình sửa
+      const oldImages = await db.product_images.findAll({
+        where: { product_id: id },
+        transaction,
+      });
+      console.log(
+        ">>> [Service] Các ảnh cũ trong DB (trước khi sửa):",
+        oldImages.map((img) => img.url),
+      );
+
+      for (const oldImg of oldImages) {
+        const isKept = data.images.some(
+          (img) =>
+            (typeof img === "object" && img.id === oldImg.id) ||
+            (typeof img === "object" ? img.url : img) === oldImg.url,
+        );
+        if (!isKept && oldImg.public_id) {
+          // Lưu tạm vào mảng, ĐỢI COMMIT XONG MỚI XÓA để tránh lỗi mất ảnh nếu rollback
+          imagesToDeleteFromCloudinary.push(oldImg.public_id);
+        }
+      }
+      console.log(
+        ">>> [Service] Các public_id sẽ bị xóa khỏi Cloudinary (nếu commit thành công):",
+        imagesToDeleteFromCloudinary,
+      );
+
+      // B. Xóa toàn bộ record ảnh cũ trong DB để làm mới
       await db.product_images.destroy({
         where: { product_id: id },
         transaction,
       });
+      console.log(">>> [Service] Đã xóa record ảnh cũ trong Database.");
 
-      // B. Lọc các URL hợp lệ và chuẩn bị mảng để Insert
+      // C. Chuẩn bị mảng để Insert
+      let thumbnailFound = false;
       const imageRecords = data.images
-        .filter((url) => url && url.trim() !== "") // Loại bỏ chuỗi rỗng/null
-        .map((url, index) => ({
-          product_id: id,
-          url: url,
-          is_thumbnail: index === 0 ? 1 : 0, // Ảnh đầu tiên là thumbnail
-        }));
+        .map((img, index) => {
+          const url = typeof img === "string" ? img : img.url;
+          let pId = typeof img === "object" ? img.public_id : null;
+          let isThumb = 0;
 
-      // C. Bulk insert ảnh mới
+          if (data.thumbnailUrl && url === data.thumbnailUrl) isThumb = 1;
+          else if (
+            data.thumbnailIndex !== undefined &&
+            parseInt(data.thumbnailIndex) === index
+          )
+            isThumb = 1;
+          else if (
+            typeof img === "object" &&
+            (img.is_thumbnail == 1 || String(img.is_thumbnail) === "true")
+          )
+            isThumb = 1;
+
+          // Phục hồi public_id cũ nếu Frontend gửi thiếu để bảo toàn kết nối với Cloudinary
+          if (!pId && url) {
+            const old = oldImages.find((o) => o.url === url);
+            if (old) pId = old.public_id;
+          }
+
+          return {
+            product_id: id,
+            url: url,
+            public_id: pId || null,
+            is_thumbnail: isThumb,
+          };
+        })
+        .filter((record) => record.url); // Lọc bỏ các phần tử bị lỗi/không có URL
+
+      if (imageRecords.length > 0) {
+        for (let record of imageRecords) {
+          if (record.is_thumbnail === 1) {
+            if (!thumbnailFound) thumbnailFound = true;
+            else record.is_thumbnail = 0;
+          }
+        }
+        if (!thumbnailFound) {
+          imageRecords[0].is_thumbnail = 1;
+        }
+      }
+
+      console.log(
+        ">>> [Service] Mảng imageRecords chuẩn bị insert vào DB:",
+        JSON.stringify(imageRecords, null, 2),
+      );
+
+      // D. Bulk insert ảnh mới
       if (imageRecords.length > 0) {
         await db.product_images.bulkCreate(imageRecords, { transaction });
+        console.log(
+          ">>> [Service] Đã bulkCreate ảnh mới vào Database thành công.",
+        );
       }
+    } else {
+      console.log(
+        ">>> [Service] KHÔNG CÓ data.images hoặc không phải là mảng, BỎ QUA KHÂU XÓA/SỬA ẢNH.",
+      );
     }
 
     // 5. Mọi thứ thành công thì Lưu (Commit)
     await transaction.commit();
+    console.log(">>> [Service] Transaction COMMIT thành công!");
+
+    // 6. Xóa ảnh rác trên Cloudinary SAU KHI transaction đã commit thành công tuyệt đối
+    if (imagesToDeleteFromCloudinary.length > 0) {
+      for (const pid of imagesToDeleteFromCloudinary) {
+        await cloudinary.uploader.destroy(pid).catch(() => {});
+      }
+      console.log(">>> [Service] Đã dọn dẹp ảnh rác trên Cloudinary xong.");
+    }
 
     return {
       EC: 0,
@@ -369,6 +523,17 @@ const updateProduct = async (id, data) => {
   } catch (e) {
     // Nếu có lỗi, Hoàn tác (Rollback) toàn bộ quá trình
     await transaction.rollback();
+
+    // Dọn rác các ảnh vừa mới upload lên mây (vì DB đã rollback)
+    if (data.images && Array.isArray(data.images)) {
+      const newUploadedPids = data.images
+        .filter((img) => typeof img === "object" && img.public_id && !img.id)
+        .map((img) => img.public_id);
+      for (const pid of newUploadedPids) {
+        await cloudinary.uploader.destroy(pid).catch(() => {});
+      }
+    }
+
     console.log(">>> Check error: ", e);
     return {
       EC: -1,

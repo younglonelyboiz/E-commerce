@@ -127,7 +127,8 @@ const AdminProduct = () => {
         if (actionModal === 'CREATE') {
             res = await createProductApi(productData);
         } else {
-            res = await updateProductApi(productData.id, productData);
+            const productId = productData instanceof FormData ? productData.get('id') : productData.id;
+            res = await updateProductApi(productId, productData);
         }
 
         if (res && res.EC === 0) {

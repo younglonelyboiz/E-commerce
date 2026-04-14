@@ -41,6 +41,9 @@ function Header() {
                     }
                 } catch (error) {
                     console.error("Lỗi đếm giỏ hàng:", error);
+                    if (error?.response?.status === 401) {
+                        logoutContext();
+                    }
                 }
             }
         };
@@ -59,6 +62,9 @@ function Header() {
                     }
                 } catch (error) {
                     console.error("Lỗi đếm đơn hàng:", error);
+                    if (error?.response?.status === 401) {
+                        logoutContext();
+                    }
                 }
             } else {
                 setActiveOrderCount(0);
@@ -79,7 +85,13 @@ function Header() {
             }
         } catch (error) {
             console.error(error);
-            toast.error("Lỗi kết nối server!");
+            if (error?.response?.status === 401) {
+                logoutContext();
+                toast.success("Đăng xuất thành công!");
+                navigate("/login");
+            } else {
+                toast.error("Lỗi kết nối server!");
+            }
         }
     };
 

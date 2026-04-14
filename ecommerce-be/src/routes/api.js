@@ -12,6 +12,7 @@ import {
   readProductsForAdmin, // Tên hàm xử lý logic top-selling ở Controller
   getProductDetail, // Thêm mới: Lấy chi tiết sản phẩm theo ID
 } from "../controllers/productController.js";
+import uploadCloud from "../config/cloudinary.config.js";
 
 import { getAllBrands } from "../controllers/brandController.js";
 import { getAllCategories } from "../controllers/categoriesController.js";
@@ -67,13 +68,37 @@ import {
 const initApiRoutes = (app) => {
   const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
 
+  // Middleware xử lý upload ảnh an toàn, bắt lỗi Multer/Cloudinary để tránh crash server
+  const handleImageUpload = (req, res, next) => {
+    uploadCloud.any()(req, res, (err) => {
+      if (err) {
+        console.error(">>> [Upload Error]:", err);
+        return res
+          .status(500)
+          .json({
+            EC: -1,
+            EM: "Lỗi upload ảnh: " + (err.message || "Cloudinary error"),
+            DT: err,
+          });
+      }
+      next();
+    });
+  };
+
   router.get(
     "/admin/products",
     checkUserJWT,
     checkAdminRole,
     readProductsForAdmin,
   );
-  router.post("/create-product", checkUserJWT, checkAdminRole, createProduct);
+
+  router.post(
+    "/create-product",
+    checkUserJWT,
+    checkAdminRole,
+    handleImageUpload,
+    createProduct,
+  );
   router.delete(
     "/delete-product/:id",
     checkUserJWT,
@@ -84,6 +109,7 @@ const initApiRoutes = (app) => {
     "/update-product/:id",
     checkUserJWT,
     checkAdminRole,
+    handleImageUpload,
     updateProductbyID,
   ); // --- Routes cho trang chủ (Điện Máy Xanh style) ---
 

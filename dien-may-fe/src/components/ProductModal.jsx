@@ -5,47 +5,57 @@ import { toast } from 'react-toastify';
 const ProductModal = ({ show, handleClose, action, dataModal, brands, categories, handleSubmitForm }) => {
     const initialState = {
         name: '', sku: '', regular_price: 0, discount_price: 0,
-        quantity: 0, brand_id: '', category_id: '', images: ['']
+        quantity: 0, brand_id: '', category_id: ''
     };
 
     const [productData, setProductData] = useState(initialState);
+    const [existingImages, setExistingImages] = useState([]);
+    const [newImageFiles, setNewImageFiles] = useState([]);
+    const [previewNewImages, setPreviewNewImages] = useState([]);
+    const [newImageUrls, setNewImageUrls] = useState(['']); // Chứa các link nhập tay
+    const [thumbnail, setThumbnail] = useState({ type: '', payload: '' }); // type: 'OLD'|'NEW', payload: url|index
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
         if (show) {
             setErrors({});
+            setNewImageFiles([]);
+            setPreviewNewImages([]);
 
             // Kiểm tra dataModal bây giờ phải là object sản phẩm (có name, sku...)
             if (action === 'UPDATE' && dataModal && dataModal.id) {
-                // Lấy danh sách ảnh từ product_images array hoặc thumbnailUrl
                 let images = [];
+                let initialThumb = { type: '', payload: '' };
                 if (dataModal.product_images && dataModal.product_images.length > 0) {
-                    // Lấy tất cả URL từ mảng product_images
-                    images = dataModal.product_images.map(img => img.url);
+                    images = dataModal.product_images;
+                    const thumb = images.find(img => img.is_thumbnail === 1) || images[0];
+                    if (thumb) initialThumb = { type: 'OLD', payload: thumb.url };
                 } else if (dataModal.thumbnailUrl) {
-                    images = [dataModal.thumbnailUrl];
-                } else {
-                    images = [''];
+                    images = [{ url: dataModal.thumbnailUrl }];
+                    initialThumb = { type: 'OLD', payload: dataModal.thumbnailUrl };
                 }
+                setExistingImages(images);
+                setNewImageUrls([]); // Chế độ sửa không hiện sẵn ô link trống
 
                 setProductData({
                     id: dataModal.id,
                     name: dataModal.name || '',
                     sku: dataModal.sku || '',
-                    // Ép kiểu String từ API sang Number cho input
                     regular_price: dataModal.regular_price ? Number(dataModal.regular_price) : 0,
                     discount_price: dataModal.discount_price ? Number(dataModal.discount_price) : 0,
                     quantity: dataModal.quantity || 0,
-                    // Ép kiểu ID về String để khớp với value của <option>
                     brand_id: dataModal.brand_id ? String(dataModal.brand_id) : '',
-                    category_id: dataModal.category_id ? String(dataModal.category_id) : '',
-                    images: images
+                    category_id: dataModal.category_id ? String(dataModal.category_id) : ''
                 });
+                setThumbnail(initialThumb);
             } else {
+                setExistingImages([]);
+                setNewImageUrls(['']); // Hiện sẵn 1 ô để nhập link cho tiện
                 setProductData({
                     name: '', sku: '', regular_price: 0, discount_price: 0,
-                    quantity: 0, brand_id: '', category_id: '', images: ['']
+                    quantity: 0, brand_id: '', category_id: ''
                 });
+                setThumbnail({ type: '', payload: '' });
             }
         }
     }, [show, dataModal, action]);
@@ -56,7 +66,11 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
         if (!productData.sku?.trim()) newErrors.sku = true;
         if (!productData.category_id) newErrors.category_id = true;
         if (!productData.brand_id) newErrors.brand_id = true;
-        if (!productData.images[0]?.trim()) newErrors.images = true;
+
+        const validUrls = newImageUrls.filter(url => url.trim() !== '');
+        if (existingImages.length === 0 && newImageFiles.length === 0 && validUrls.length === 0) {
+            newErrors.images = true;
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -68,7 +82,36 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
             return;
         }
 
-        const response = await handleSubmitForm(productData);
+        // Sử dụng FormData để gửi cả TEXT, mảng JSON và FILE vật lý
+        const formData = new FormData();
+        if (action === 'UPDATE') formData.append("id", productData.id);
+        formData.append("name", productData.name);
+        formData.append("sku", productData.sku);
+        formData.append("regular_price", productData.regular_price);
+        formData.append("discount_price", productData.discount_price);
+        formData.append("quantity", productData.quantity);
+        formData.append("brand_id", productData.brand_id);
+        formData.append("category_id", productData.category_id);
+
+        // Reset toàn bộ is_thumbnail cũ về 0 để Backend không bị nhầm lẫn
+        const processedExistingImages = existingImages.map(img => ({ ...img, is_thumbnail: 0 }));
+        formData.append("keptImages", JSON.stringify(processedExistingImages));
+        formData.append("newImageUrls", JSON.stringify(newImageUrls.filter(url => url.trim() !== '')));
+
+        newImageFiles.forEach((file) => {
+            formData.append("images", file);
+        });
+
+        // Gửi thông tin ảnh đại diện đã được chọn xuống Backend
+        if (thumbnail.type === 'OLD') {
+            formData.append("thumbnailUrl", thumbnail.payload);
+        } else if (thumbnail.type === 'NEW') {
+            const validUrlsCount = newImageUrls.filter(url => url.trim() !== '').length;
+            const finalIndex = existingImages.length + validUrlsCount + thumbnail.payload;
+            formData.append("thumbnailIndex", finalIndex);
+        }
+
+        const response = await handleSubmitForm(formData);
 
         if (response && response.EC === 0) {
             toast.success(response.EM);
@@ -81,11 +124,47 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
         }
     };
 
-    const handleImageInputChange = (index, value) => {
-        const newImages = [...productData.images];
-        newImages[index] = value;
-        setProductData({ ...productData, images: newImages });
-        if (index === 0) setErrors(prev => ({ ...prev, images: false }));
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files);
+        setNewImageFiles(prev => [...prev, ...files]);
+
+        const newPreviews = files.map(file => URL.createObjectURL(file));
+        setPreviewNewImages(prev => [...prev, ...newPreviews]);
+        setErrors(prev => ({ ...prev, images: false }));
+
+        // Tự động set ảnh đại diện nếu đây là ảnh đầu tiên được tải lên
+        if (thumbnail.type === '' && existingImages.length === 0) {
+            setThumbnail({ type: 'NEW', payload: 0 });
+        }
+    };
+
+    const handleRemoveExistingImage = (index) => {
+        const removedImg = existingImages[index];
+        if (thumbnail.type === 'OLD' && thumbnail.payload === removedImg.url) {
+            setThumbnail({ type: '', payload: '' });
+        }
+        setExistingImages(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleRemoveNewImage = (index) => {
+        // Xử lý giữ nguyên thứ tự thumbnail khi xóa bớt ảnh preview
+        if (thumbnail.type === 'NEW' && thumbnail.payload === index) {
+            setThumbnail({ type: '', payload: '' });
+        } else if (thumbnail.type === 'NEW' && thumbnail.payload > index) {
+            setThumbnail({ type: 'NEW', payload: thumbnail.payload - 1 });
+        }
+        setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+        setPreviewNewImages(prev => {
+            URL.revokeObjectURL(prev[index]);
+            return prev.filter((_, i) => i !== index);
+        });
+    };
+
+    const handleUrlChange = (index, value) => {
+        const newUrls = [...newImageUrls];
+        newUrls[index] = value;
+        setNewImageUrls(newUrls);
+        setErrors(prev => ({ ...prev, images: false }));
     };
 
     return (
@@ -188,37 +267,89 @@ const ProductModal = ({ show, handleClose, action, dataModal, brands, categories
 
                     <div className="mt-4">
                         <div className="d-flex justify-content-between align-items-center mb-2">
-                            <label className="fw-bold small">Danh sách URL Hình ảnh</label>
-                            <Button variant="outline-primary" size="sm" onClick={() => setProductData({ ...productData, images: [...productData.images, ''] })}>
-                                <i className="bi bi-plus-lg me-1"></i>Thêm ảnh
-                            </Button>
+                            <label className={`fw-bold small ${errors.images ? 'text-danger' : ''}`}>Hình ảnh sản phẩm (File hoặc Link)</label>
+                            <div className="d-flex gap-2">
+                                <Button variant="outline-primary" size="sm" onClick={() => setNewImageUrls([...newImageUrls, ''])}>
+                                    <i className="bi bi-link-45deg me-1"></i>Thêm Link
+                                </Button>
+                                <Form.Label className="btn btn-outline-success btn-sm m-0">
+                                    <i className="bi bi-upload me-1"></i> Tải file lên
+                                    <Form.Control type="file" multiple accept="image/*" hidden onChange={handleImageChange} />
+                                </Form.Label>
+                            </div>
                         </div>
-                        {productData.images.map((url, index) => (
+
+                        {/* Danh sách input nhập Link ảnh */}
+                        {newImageUrls.map((url, index) => (
                             <Row key={index} className="mb-2 g-2 align-items-center">
                                 <Col>
                                     <Form.Control
                                         type="text"
-                                        isInvalid={index === 0 && errors.images}
-                                        placeholder={`URL ảnh ${index + 1} ${index === 0 ? '(Bắt buộc)' : ''}`}
+                                        placeholder={`Nhập đường dẫn URL của hình ảnh...`}
                                         value={url}
-                                        onChange={(e) => handleImageInputChange(index, e.target.value)}
+                                        onChange={(e) => handleUrlChange(index, e.target.value)}
                                     />
                                 </Col>
                                 <Col xs="auto">
                                     <Button
                                         variant="outline-danger"
                                         size="sm"
-                                        onClick={() => {
-                                            const newImages = productData.images.filter((_, i) => i !== index);
-                                            setProductData({ ...productData, images: newImages.length > 0 ? newImages : [''] });
-                                        }}
-                                        disabled={productData.images.length === 1}
+                                        onClick={() => setNewImageUrls(newImageUrls.filter((_, i) => i !== index))}
                                     >
                                         <i className="bi bi-trash"></i>
                                     </Button>
                                 </Col>
                             </Row>
                         ))}
+
+                        {/* Khu vực hiển thị File tải lên & Ảnh cũ */}
+                        <div className="d-flex flex-wrap gap-3 mt-3">
+                            {existingImages.map((img, index) => (
+                                <div key={`old-${index}`} className="position-relative border rounded p-1 overflow-hidden" style={{ width: '110px', height: '110px' }}>
+                                    <img src={img.url} alt="old-img" className="w-100 h-100 object-fit-cover rounded" style={{ paddingBottom: '22px' }} />
+                                    <button type="button" className="btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle rounded-circle" style={{ width: '24px', height: '24px', padding: 0, lineHeight: 1 }} onClick={() => handleRemoveExistingImage(index)}>
+                                        <i className="bi bi-x"></i>
+                                    </button>
+                                    {thumbnail.type === 'OLD' && thumbnail.payload === img.url ? (
+                                        <div className="position-absolute bottom-0 start-0 w-100 text-center bg-success text-white fw-bold" style={{ fontSize: '11px', padding: '4px 0' }}>
+                                            <i className="bi bi-check-circle-fill me-1"></i>Đại diện
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary position-absolute bottom-0 start-0 w-100 rounded-0 rounded-bottom border-0"
+                                            style={{ fontSize: '11px', padding: '4px 0', opacity: 0.9 }}
+                                            onClick={() => setThumbnail({ type: 'OLD', payload: img.url })}
+                                        >
+                                            Làm đại diện
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            {previewNewImages.map((url, index) => (
+                                <div key={`new-${index}`} className="position-relative border rounded p-1 border-success overflow-hidden" style={{ width: '110px', height: '110px' }}>
+                                    <img src={url} alt="new-img" className="w-100 h-100 object-fit-cover rounded" style={{ paddingBottom: '22px' }} />
+                                    <button type="button" className="btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle rounded-circle" style={{ width: '24px', height: '24px', padding: 0, lineHeight: 1 }} onClick={() => handleRemoveNewImage(index)}>
+                                        <i className="bi bi-x"></i>
+                                    </button>
+                                    {thumbnail.type === 'NEW' && thumbnail.payload === index ? (
+                                        <div className="position-absolute bottom-0 start-0 w-100 text-center bg-success text-white fw-bold" style={{ fontSize: '11px', padding: '4px 0' }}>
+                                            <i className="bi bi-check-circle-fill me-1"></i>Đại diện
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary position-absolute bottom-0 start-0 w-100 rounded-0 rounded-bottom border-0"
+                                            style={{ fontSize: '11px', padding: '4px 0', opacity: 0.9 }}
+                                            onClick={() => setThumbnail({ type: 'NEW', payload: index })}
+                                        >
+                                            Làm đại diện
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                        {errors.images && <div className="text-danger small mt-2">Vui lòng cung cấp ít nhất 1 hình ảnh!</div>}
                     </div>
                 </Form>
             </Modal.Body>

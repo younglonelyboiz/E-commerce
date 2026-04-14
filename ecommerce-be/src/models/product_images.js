@@ -23,6 +23,10 @@ export default class product_images extends Model {
           type: DataTypes.STRING(500),
           allowNull: false,
         },
+        public_id: {
+          type: DataTypes.STRING(255),
+          allowNull: true,
+        },
         is_thumbnail: {
           type: DataTypes.TINYINT,
           allowNull: true,

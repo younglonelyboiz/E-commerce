@@ -44,11 +44,19 @@ const checkUserJWT = (req, res, next) => {
     next();
   } catch (err) {
     console.log(">>> JWT Verify Error:", err.message);
-    return res.status(401).json({
-      EC: -1,
-      EM: "Phiên đăng nhập đã hết hạn hoặc không hợp lệ!",
-      DT: "",
-    });
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        EC: -2,
+        EM: "Phiên đăng nhập đã hết hạn!",
+        DT: "",
+      });
+    } else {
+      return res.status(401).json({
+        EC: -3,
+        EM: "Token không hợp lệ!",
+        DT: "",
+      });
+    }
   }
 };
 

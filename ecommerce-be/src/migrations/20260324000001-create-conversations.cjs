@@ -2,6 +2,9 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // Dọn dẹp bảng nếu bị kẹt từ lần chạy lỗi trước đó
+    await queryInterface.dropTable("conversations").catch(() => {});
+
     await queryInterface.createTable("conversations", {
       id: {
         allowNull: false,
@@ -66,14 +69,18 @@ module.exports = {
     });
 
     // Tạo Indexes để tối ưu tốc độ truy vấn
-    await queryInterface.addIndex("conversations", ["user_id"], {
-      name: "idx_conversations_user_id",
-    });
-    await queryInterface.addIndex(
-      "conversations",
-      ["assignee_id", "last_message_at"],
-      { name: "idx_conversations_assignee_last_message" },
-    );
+    try {
+      await queryInterface.addIndex("conversations", ["user_id"], {
+        name: "idx_conversations_user_id",
+      });
+      await queryInterface.addIndex(
+        "conversations",
+        ["assignee_id", "last_message_at"],
+        { name: "idx_conversations_assignee_last_message" },
+      );
+    } catch (error) {
+      console.log("Indexes existed and safely skipped.");
+    }
   },
 
   async down(queryInterface, Sequelize) {

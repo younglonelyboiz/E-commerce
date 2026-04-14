@@ -2,6 +2,9 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // Dọn dẹp bảng nếu bị kẹt từ lần chạy lỗi trước đó
+    await queryInterface.dropTable("messages").catch(() => {});
+
     await queryInterface.createTable("messages", {
       id: {
         allowNull: false,
@@ -47,11 +50,15 @@ module.exports = {
       deleted_at: { allowNull: true, type: Sequelize.DATE },
     });
 
-    await queryInterface.addIndex(
-      "messages",
-      ["conversation_id", "created_at"],
-      { name: "idx_messages_conversation_id_created_at" },
-    );
+    try {
+      await queryInterface.addIndex(
+        "messages",
+        ["conversation_id", "created_at"],
+        { name: "idx_messages_conversation_id_created_at" },
+      );
+    } catch (error) {
+      console.log("Index existed and safely skipped.");
+    }
   },
 
   async down(queryInterface, Sequelize) {
