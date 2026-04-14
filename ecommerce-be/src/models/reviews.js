@@ -13,6 +13,7 @@ export default class reviews extends Model {
         product_id: {
           type: DataTypes.INTEGER,
           allowNull: true,
+          allowNull: false,
           references: {
             model: "products",
             key: "id",
@@ -21,6 +22,7 @@ export default class reviews extends Model {
         user_id: {
           type: DataTypes.INTEGER,
           allowNull: true,
+          allowNull: false,
           references: {
             model: "users",
             key: "id",
@@ -29,6 +31,7 @@ export default class reviews extends Model {
         order_id: {
           type: DataTypes.INTEGER,
           allowNull: true,
+          allowNull: false,
           references: {
             model: "orders",
             key: "id",

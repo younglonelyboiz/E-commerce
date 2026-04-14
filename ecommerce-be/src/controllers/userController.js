@@ -5,7 +5,11 @@ import {
   getUserDetailWithOrders,
   changePasswordService,
 } from "../services/userService.js";
-import { loginUser } from "../services/authService.js";
+import {
+  loginUser,
+  generateGoogleAuthUrlService,
+  handleGoogleCallbackService,
+} from "../services/authService.js";
 
 const checkValidUserData = (data) => {
   console.log(data);
@@ -128,6 +132,67 @@ export const readUsersAdmin = async (req, res) => {
   } catch (e) {
     console.log(">>> Error in readUsersAdmin:", e);
     return sendResponse(res, -1, "Error from server", "");
+  }
+};
+
+// ==================================================
+// GOOGLE OAUTH CONTROLLERS
+// ==================================================
+export const getGoogleAuthUrl = async (req, res) => {
+  try {
+    const result = generateGoogleAuthUrlService();
+    if (result.EC === 0) {
+      // Set Cookie HttpOnly lưu State chống CSRF (Domain BE tự gửi Cookie cho trình duyệt)
+      res.cookie("oauth_state", result.DT.state, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 5 * 60 * 1000, // 5 phút
+        path: "/",
+        sameSite: "lax",
+      });
+      // Trả URL về cho Frontend tự Redirect (Đảm bảo Axios không bị lỗi CORS)
+      return sendResponse(res, 0, "OK", result.DT.googleAuthUrl);
+    }
+    return sendResponse(res, -1, result.EM, null);
+  } catch (error) {
+    console.error(">>> Error getGoogleAuthUrl:", error);
+    return sendResponse(res, -1, "Lỗi server", null);
+  }
+};
+
+export const handleGoogleCallback = async (req, res) => {
+  try {
+    const { code, state } = req.query;
+    const storedState = req.cookies?.oauth_state;
+    res.clearCookie("oauth_state"); // Xóa state cũ ngay sau khi lấy ra
+
+    if (!code)
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?error=google_auth_failed`,
+      );
+
+    const result = await handleGoogleCallbackService(code, state, storedState);
+
+    if (result.EC === 0) {
+      // Đăng nhập thành công -> Set JWT vào Cookie
+      res.cookie("access_token", result.DT.access_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+        sameSite: "lax",
+      });
+      return res.redirect(`${process.env.FRONTEND_URL}`); // Chuyển hướng người dùng về trang chủ
+    } else {
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?error=${encodeURIComponent(
+          result.EM,
+        )}`,
+      );
+    }
+  } catch (error) {
+    console.error(">>> Error handleGoogleCallback:", error);
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
   }
 };
 

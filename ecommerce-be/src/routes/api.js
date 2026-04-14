@@ -23,6 +23,8 @@ import {
   readUsersAdmin,
   readUserDetail,
   changePassword, // Thêm controller xử lý đổi mật khẩu
+  getGoogleAuthUrl,
+  handleGoogleCallback,
 } from "../controllers/userController.js";
 
 import { readAllRoles, updateRole } from "../controllers/roleController.js";
@@ -149,6 +151,10 @@ const initApiRoutes = (app) => {
   router.post("/payment/webhook", handlePayosWebhook);
   router.post("/payment/create-link", checkUserJWT, createPaymentLink);
   router.post("/payment/retry", checkUserJWT, retryPaymentLink);
+
+  // --- Routes Google OAuth ---
+  router.get("/auth/google/url", getGoogleAuthUrl); // Xin URL Auth
+  router.get("/auth/google/callback", handleGoogleCallback); // Google trả mã Code về đây
 
   // route review
   router.post("/review/create", checkUserJWT, createReview);

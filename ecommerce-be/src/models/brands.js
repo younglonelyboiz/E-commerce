@@ -6,6 +6,7 @@ export default class brands extends Model {
       {
         id: {
           type: DataTypes.INTEGER,
+          autoIncrement: true,
           allowNull: false,
           primaryKey: true,
         },

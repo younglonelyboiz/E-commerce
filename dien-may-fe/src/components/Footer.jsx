@@ -82,9 +82,9 @@ const Footer = () => {
             {/* --- PHẦN DƯỚI: COPYRIGHT --- */}
             <div className="footer-bottom">
                 <div className="container text-center">
-                    <p className="mb-1">© 2024. Công ty Cổ phần Thương mại Dịch vụ Điện Máy.</p>
+                    <p className="mb-1">© 23/09/2003. Code Web Alo Bé Đức</p>
                     <p className="small text-secondary mb-0">
-                        Địa chỉ: 128 Trần Quang Khải, P. Tân Định, Q.1, TP. Hồ Chí Minh. MST: 0303217354.
+                        Địa chỉ: Ngõ 127, Phố Phùng Khoang, Thành Phố Hà Nội
                     </p>
                 </div>
             </div>

@@ -1,9 +1,10 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Login.scss';
-import { loginApi } from '../services/userService';
+import { loginApi, getGoogleAuthUrlApi } from '../services/userService';
 import { toast } from 'react-toastify';
-import { UserContext } from '../context/UserContext';
+import { UserContext } from '../context/UserContext'; // Import Context
+
 
 const Login = () => {
     const navigate = useNavigate();
@@ -55,6 +56,19 @@ const Login = () => {
         }
     };
 
+    const handleGoogleLogin = async () => {
+        try {
+            let res = await getGoogleAuthUrlApi();
+            if (res && +res.EC === 0 && res.DT) {
+                window.location.href = res.DT; // FE thực hiện redirect từ URL backend trả về
+            } else {
+                toast.error("Không thể kết nối Server Google OAuth!");
+            }
+        } catch (error) {
+            toast.error("Lỗi hệ thống khi gọi Google Auth!");
+        }
+    };
+
     return (
         <div className="login-page">
             <div className="login-card">
@@ -64,12 +78,12 @@ const Login = () => {
                 </div>
 
                 <div className="social-group">
-                    <button className="btn-social google" type="button">
-                        <i className="bi bi-google"></i>
+                    <button className="btn-social google" type="button" onClick={handleGoogleLogin}>
+                        <i className="fa-brands fa-google"></i>
                         <span>Google</span>
                     </button>
                     <button className="btn-social facebook" type="button">
-                        <i className="bi bi-facebook"></i>
+                        <i className="fa-brands fa-facebook"></i>
                         <span>Facebook</span>
                     </button>
                 </div>

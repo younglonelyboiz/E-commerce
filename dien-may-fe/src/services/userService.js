@@ -14,6 +14,11 @@ export const loginApi = (email, password) => {
   return axios.post("/login", { email, password });
 };
 
+// --- GOOGLE OAUTH ---
+export const getGoogleAuthUrlApi = () => {
+  return axios.get("/auth/google/url");
+};
+
 // --- THÊM HÀM NÀY ĐỂ FIX LỖI ---
 export const getUserAccount = () => {
   return axios.get("/account"); // Đường dẫn này phải khớp với router.get("/account",...) ở Backend
