@@ -68,6 +68,7 @@ import {
   getConversations,
   getMessages,
   getUserMessages,
+  uploadChatImage,
 } from "../controllers/chatController.js";
 
 const initApiRoutes = (app) => {
@@ -205,6 +206,12 @@ const initApiRoutes = (app) => {
     checkUserJWT,
     checkAdminRole,
     getMessages,
+  );
+  router.post(
+    "/chat/upload-image",
+    checkUserJWT,
+    uploadCloud.single("image"),
+    uploadChatImage,
   );
 
   router.get("/account", checkUserJWT, getUserAccount);

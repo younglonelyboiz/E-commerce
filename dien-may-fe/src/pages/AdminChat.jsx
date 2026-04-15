@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { UserContext } from '../context/UserContext';
 import { io } from 'socket.io-client';
-import { getConversationsApi, getAdminMessagesApi } from '../services/chatService';
+import { getConversationsApi, getAdminMessagesApi, uploadChatImageApi } from '../services/chatService';
 import { toast } from 'react-toastify';
 import './AdminChat.scss';
 
@@ -13,10 +13,12 @@ const AdminChat = () => {
     const [inputValue, setInputValue] = useState('');
     const [socket, setSocket] = useState(null);
     const [typingConversations, setTypingConversations] = useState({});
+    const [isUploading, setIsUploading] = useState(false);
 
     const messagesEndRef = useRef(null);
     const adminTypingTimeoutRef = useRef(null);
     const isAdminTypingRef = useRef(false);
+    const fileInputRef = useRef(null);
 
     const activeConvRef = useRef(activeConv);
     useEffect(() => {
@@ -202,6 +204,63 @@ const AdminChat = () => {
         }
     };
 
+    // Xử lý upload ảnh
+    const handleImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !socket || !activeConv) return;
+
+        // Kiểm tra file
+        if (!file.type.startsWith('image/')) {
+            toast.error("Vui lòng chọn một file ảnh!");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("Dung lượng ảnh không được vượt quá 5MB!");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('caption', ''); // Hoặc bạn có thể thêm caption input
+
+            const res = await uploadChatImageApi(formData);
+            if (res && res.EC === 0) {
+                const { imageUrl, publicId } = res.DT;
+
+                // Báo admin đã ngừng gõ
+                socket.emit("admin_typing", {
+                    userId: activeConv.user_id || activeConv.customer?.id,
+                    isTyping: false
+                });
+                isAdminTypingRef.current = false;
+                if (adminTypingTimeoutRef.current) clearTimeout(adminTypingTimeoutRef.current);
+
+                // Gửi ảnh qua socket
+                socket.emit("admin_reply_image", {
+                    adminId: user.id || user.account?.id,
+                    conversationId: activeConv.id,
+                    imageUrl: imageUrl,
+                    publicId: publicId,
+                    caption: "",
+                    userId: activeConv.user_id || activeConv.customer?.id
+                });
+
+                toast.success("Gửi ảnh thành công!");
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            } else {
+                toast.error(res.EM || "Lỗi upload ảnh");
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            toast.error("Lỗi khi upload ảnh");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const formatTime = (dateStr) => {
         if (!dateStr) return "";
         const date = new Date(dateStr);
@@ -310,6 +369,7 @@ const AdminChat = () => {
                                 {messages.map((msg, idx) => {
                                     const isAdmin = msg.sender_type === 'ADMIN';
                                     const isSystem = msg.message_type === 'SYSTEM';
+                                    const isImage = msg.message_type === 'IMAGE';
 
                                     if (isSystem) {
                                         return (
@@ -322,7 +382,21 @@ const AdminChat = () => {
                                     return (
                                         <div key={idx} className={`d-flex mb-3 ${isAdmin ? 'justify-content-end' : 'justify-content-start'}`}>
                                             <div className={`message-bubble p-2 px-3 rounded-3 shadow-sm ${isAdmin ? 'bg-danger text-white' : 'bg-white border'}`} style={{ maxWidth: '75%' }}>
-                                                {msg.content}
+                                                {isImage ? (
+                                                    <div>
+                                                        <img
+                                                            src={msg.image_url}
+                                                            alt="chat-image"
+                                                            style={{ maxWidth: '100%', borderRadius: '8px' }}
+                                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                                        />
+                                                        {msg.content && msg.content !== '📷 Ảnh' && (
+                                                            <p className="mb-0 mt-2">{msg.content}</p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    msg.content
+                                                )}
                                                 <div className={`small mt-1 text-end ${isAdmin ? 'text-white-50' : 'text-muted'}`} style={{ fontSize: '11px' }}>
                                                     {formatTime(msg.createdAt || msg.created_at)}
                                                 </div>
@@ -348,15 +422,30 @@ const AdminChat = () => {
                             {/* Footer Input */}
                             <div className="p-3 border-top bg-white">
                                 {(activeConv.assignee_id === null || activeConv.assignee_id === (user.id || user.account?.id)) ? (
-                                    <form onSubmit={handleSendMessage} className="d-flex">
+                                    <form onSubmit={handleSendMessage} className="d-flex gap-2">
                                         <input
                                             type="text"
-                                            className="form-control me-2"
+                                            className="form-control"
                                             placeholder="Nhập phản hồi cho khách hàng..."
                                             value={inputValue}
                                             onChange={handleInputChange}
                                         />
-                                        <button type="submit" className="btn btn-danger px-4">
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            style={{ display: 'none' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-danger"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={isUploading}
+                                        >
+                                            <i className="bi bi-image"></i>
+                                        </button>
+                                        <button type="submit" className="btn btn-danger px-4" disabled={isUploading}>
                                             <i className="bi bi-send-fill"></i>
                                         </button>
                                     </form>

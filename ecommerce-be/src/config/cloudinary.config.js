@@ -13,10 +13,11 @@ cloudinary.config({
 });
 
 // 2. Cấu hình nơi lưu trữ (Storage) cho Multer
+// Lưu ý: Để sử dụng folder khác nhau, có thể tạo uploadCloud với params khác
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "dienmay_products", // Tên thư mục sẽ chứa ảnh trên Cloudinary
+    folder: "dienmay_chat", // Tên thư mục sẽ chứa ảnh chat trên Cloudinary (có thể override khi cần)
     allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"], // Các định dạng cho phép
     // Bạn có thể thêm transformation ở đây nếu muốn tự động resize ảnh
   },

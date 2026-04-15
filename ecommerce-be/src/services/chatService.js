@@ -334,3 +334,139 @@ export const getUserMessagesService = async (userId) => {
     return { EC: -1, EM: "Lỗi hệ thống", DT: [] };
   }
 };
+
+// Luồng: Khách hàng gửi tin nhắn với ảnh
+export const handleUserImageMessageService = async (
+  userId,
+  imageUrl,
+  publicId,
+  caption = "",
+) => {
+  const transaction = await db.sequelize.transaction();
+  try {
+    // 1. Tìm hội thoại đang OPEN của user, nếu chưa có thì tạo mới
+    let conversation = await db.conversations.findOne({
+      where: { user_id: userId, status: "OPEN" },
+      transaction,
+    });
+
+    if (!conversation) {
+      conversation = await db.conversations.create(
+        { user_id: userId, status: "OPEN" },
+        { transaction },
+      );
+    }
+
+    // 2. Tạo tin nhắn ảnh
+    const newMessage = await db.messages.create(
+      {
+        conversation_id: conversation.id,
+        sender_id: userId,
+        sender_type: "USER",
+        message_type: "IMAGE",
+        content: caption || "📷 Ảnh",
+        image_url: imageUrl,
+        public_id: publicId,
+      },
+      { transaction },
+    );
+
+    // 3. Cập nhật conversation
+    await conversation.update(
+      {
+        last_message_id: newMessage.id,
+        last_message_at: new Date(),
+        last_sender_type: "USER",
+        unread_count_admin: conversation.unread_count_admin + 1,
+      },
+      { transaction },
+    );
+
+    await transaction.commit();
+    return {
+      EC: 0,
+      EM: "Gửi ảnh thành công",
+      DT: { message: newMessage, conversation },
+    };
+  } catch (error) {
+    await transaction.rollback();
+    console.error(">>> handleUserImageMessage Error:", error);
+    return { EC: -1, EM: "Lỗi hệ thống", DT: null };
+  }
+};
+
+// Luồng: Admin gửi tin nhắn với ảnh
+export const adminImageReplyService = async (
+  adminId,
+  conversationId,
+  imageUrl,
+  publicId,
+  caption = "",
+) => {
+  const transaction = await db.sequelize.transaction();
+  try {
+    const conversation = await db.conversations.findOne({
+      where: { id: conversationId },
+      transaction,
+    });
+
+    if (!conversation) throw new Error("Hội thoại không tồn tại");
+
+    // Logic Cướp Cờ: Nếu hội thoại chưa có ai nhận
+    if (conversation.assignee_id === null) {
+      const [affectedRows] = await db.conversations.update(
+        {
+          assignee_id: adminId,
+          assigned_at: new Date(),
+        },
+        {
+          where: { id: conversationId, assignee_id: null },
+          transaction,
+        },
+      );
+
+      if (affectedRows === 0) {
+        throw new Error("Đã có Admin khác nhanh tay nhận ca này!");
+      }
+    } else if (conversation.assignee_id !== adminId) {
+      throw new Error("Hội thoại này đang được xử lý bởi Admin khác.");
+    }
+
+    // Tạo tin nhắn ảnh của Admin
+    const newMessage = await db.messages.create(
+      {
+        conversation_id: conversationId,
+        sender_id: adminId,
+        sender_type: "ADMIN",
+        message_type: "IMAGE",
+        content: caption || "📷 Ảnh",
+        image_url: imageUrl,
+        public_id: publicId,
+      },
+      { transaction },
+    );
+
+    // Cập nhật conversation
+    await conversation.update(
+      {
+        last_message_id: newMessage.id,
+        last_message_at: new Date(),
+        last_sender_type: "ADMIN",
+        unread_count_user: conversation.unread_count_user + 1,
+        assignee_id: adminId,
+      },
+      { transaction },
+    );
+
+    await transaction.commit();
+    return {
+      EC: 0,
+      EM: "Gửi ảnh thành công",
+      DT: { message: newMessage, conversation },
+    };
+  } catch (error) {
+    await transaction.rollback();
+    console.error(">>> adminImageReply Error:", error);
+    return { EC: 1, EM: error.message || "Lỗi xử lý", DT: null };
+  }
+};

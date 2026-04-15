@@ -3,6 +3,7 @@ import {
   assignAndReplyService,
   takeOverConversationService,
   closeConversationService,
+  adminImageReplyService,
 } from "../services/chatService.js";
 
 // Xử lý các sự kiện từ phía Admin
@@ -31,6 +32,37 @@ const adminHandler = (io, socket) => {
 
     if (res.EC === 0) {
       // Gửi tin nhắn về cho Khách hàng
+      const customerRoom = `customer_${res.DT.conversation.user_id}`;
+      io.to(customerRoom).emit("receive_message", res.DT.message);
+
+      // Cập nhật lại UI cho tất cả Admin đang online
+      io.to("admin_group").emit("admin_reply_update", res.DT);
+    } else {
+      socket.emit("admin_error", { message: res.EM });
+    }
+  });
+
+  // Admin phản hồi ảnh
+  socket.on("admin_reply_image", async (data) => {
+    const { adminId, conversationId, imageUrl, publicId, caption, userId } =
+      data;
+    const res = await adminImageReplyService(
+      adminId,
+      conversationId,
+      imageUrl,
+      publicId,
+      caption,
+    );
+
+    // Khi admin gửi ảnh, báo cho khách là admin đã ngừng gõ
+    if (res.EC === 0) {
+      io.to(`customer_${res.DT.conversation.user_id}`).emit("admin_typing", {
+        isTyping: false,
+      });
+    }
+
+    if (res.EC === 0) {
+      // Gửi ảnh về cho Khách hàng
       const customerRoom = `customer_${res.DT.conversation.user_id}`;
       io.to(customerRoom).emit("receive_message", res.DT.message);
 

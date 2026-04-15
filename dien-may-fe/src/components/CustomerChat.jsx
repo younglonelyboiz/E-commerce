@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { UserContext } from '../context/UserContext';
 import { io } from 'socket.io-client';
-import { getUserMessagesApi, getUnreadCountApi } from '../services/chatService';
+import { getUserMessagesApi, getUnreadCountApi, uploadChatImageApi } from '../services/chatService';
+import { toast } from 'react-toastify';
 import './CustomerChat.scss';
 
 const CustomerChat = () => {
@@ -12,11 +13,13 @@ const CustomerChat = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [isAdminTyping, setIsAdminTyping] = useState(false);
     const [socket, setSocket] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const isTypingRef = useRef(false);
     const isOpenRef = useRef(isOpen);
+    const fileInputRef = useRef(null);
     useEffect(() => { isOpenRef.current = isOpen; }, [isOpen]);
 
     // 1. Khởi tạo Socket & Load lịch sử tin nhắn
@@ -154,6 +157,59 @@ const CustomerChat = () => {
         }
     };
 
+    // Xử lý upload ảnh
+    const handleImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file || !socket) return;
+
+        // Kiểm tra file
+        if (!file.type.startsWith('image/')) {
+            toast.error("Vui lòng chọn một file ảnh!");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("Dung lượng ảnh không được vượt quá 5MB!");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('caption', '');
+
+            const res = await uploadChatImageApi(formData);
+            if (res && res.EC === 0) {
+                const { imageUrl, publicId } = res.DT;
+                const userId = user?.id || user?.account?.id;
+
+                // Báo admin đã ngừng gõ
+                socket.emit("user_typing", { userId, isTyping: false });
+                isTypingRef.current = false;
+                if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+                // Gửi ảnh qua socket
+                socket.emit("send_image", {
+                    userId: userId,
+                    imageUrl: imageUrl,
+                    publicId: publicId,
+                    caption: ""
+                });
+
+                toast.success("Gửi ảnh thành công!");
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            } else {
+                toast.error(res.EM || "Lỗi upload ảnh");
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            toast.error("Lỗi khi upload ảnh");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     // Không hiển thị chat nếu chưa đăng nhập hoặc là ADMIN
     if (!user || !user.auth || user.roles?.includes("ADMIN")) return null;
 
@@ -169,20 +225,37 @@ const CustomerChat = () => {
                     </div>
                     <div className="chat-body">
                         {messages.length === 0 && <div className="text-center text-muted mt-3 fs-6">Bắt đầu trò chuyện với chúng tôi!</div>}
-                        {messages.map((msg, idx) => (
-                            <div key={msg.id || idx} className={`message-wrapper ${msg.sender_type === 'USER' ? 'right' : 'left'}`}>
-                                {msg.message_type === 'SYSTEM' ? (
-                                    <div className="system-msg text-center w-100 my-2"><span className="badge bg-secondary opacity-75">{msg.content}</span></div>
-                                ) : (
-                                    <div className={`message-bubble ${msg.sender_type === 'USER' ? 'bg-danger text-white' : 'bg-light text-dark border'}`}>
-                                        {msg.content}
-                                        <div className={`small mt-1 ${msg.sender_type === 'USER' ? 'text-white-50 text-end' : 'text-muted text-start'}`} style={{ fontSize: '10px' }}>
-                                            {formatTime(msg.createdAt || msg.created_at)}
+                        {messages.map((msg, idx) => {
+                            const isImage = msg.message_type === 'IMAGE';
+                            return (
+                                <div key={msg.id || idx} className={`message-wrapper ${msg.sender_type === 'USER' ? 'right' : 'left'}`}>
+                                    {msg.message_type === 'SYSTEM' ? (
+                                        <div className="system-msg text-center w-100 my-2"><span className="badge bg-secondary opacity-75">{msg.content}</span></div>
+                                    ) : (
+                                        <div className={`message-bubble ${msg.sender_type === 'USER' ? 'bg-danger text-white' : 'bg-light text-dark border'}`}>
+                                            {isImage ? (
+                                                <div>
+                                                    <img
+                                                        src={msg.image_url}
+                                                        alt="chat-image"
+                                                        style={{ maxWidth: '100%', borderRadius: '8px' }}
+                                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                                    />
+                                                    {msg.content && msg.content !== '📷 Ảnh' && (
+                                                        <p className="mb-0 mt-2">{msg.content}</p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                msg.content
+                                            )}
+                                            <div className={`small mt-1 ${msg.sender_type === 'USER' ? 'text-white-50 text-end' : 'text-muted text-start'}`} style={{ fontSize: '10px' }}>
+                                                {formatTime(msg.createdAt || msg.created_at)}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                                    )}
+                                </div>
+                            );
+                        })}
                         {isAdminTyping && (
                             <div className="message-wrapper left">
                                 <div className="message-bubble bg-light text-dark border d-flex align-items-center">
@@ -198,15 +271,33 @@ const CustomerChat = () => {
                         <div ref={messagesEndRef} />
                     </div>
                     <div className="chat-footer">
-                        <form onSubmit={handleSendMessage} className="d-flex w-100">
+                        <form onSubmit={handleSendMessage} className="d-flex gap-2 w-100">
                             <input
                                 type="text"
-                                className="form-control me-2"
+                                className="form-control"
                                 placeholder="Nhập tin nhắn..."
                                 value={inputValue}
                                 onChange={handleInputChange}
                             />
-                            <button type="submit" className="btn btn-danger"><i className="bi bi-send-fill"></i></button>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                style={{ display: 'none' }}
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-outline-danger"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
+                                title="Gửi ảnh"
+                            >
+                                <i className="bi bi-image"></i>
+                            </button>
+                            <button type="submit" className="btn btn-danger" disabled={isUploading}>
+                                <i className="bi bi-send-fill"></i>
+                            </button>
                         </form>
                     </div>
                 </div>

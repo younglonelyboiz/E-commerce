@@ -1,6 +1,7 @@
 import {
   handleUserMessageService,
   markUserReadService,
+  handleUserImageMessageService,
 } from "../services/chatService.js";
 
 // Xử lý các sự kiện từ phía Khách hàng
@@ -20,6 +21,33 @@ const userHandler = (io, socket) => {
     }
     if (res.EC === 0) {
       // Emit cho tất cả thiết bị của chính user (để đồng bộ UI nếu mở nhiều tab)
+      io.to(`customer_${userId}`).emit("receive_message", res.DT.message);
+
+      // Bắn toàn bộ cho admin_group để nhảy chấm đỏ Badge và hiển thị tin mới
+      io.to("admin_group").emit("admin_receive_message", res.DT);
+    }
+  });
+
+  // Khách gửi tin nhắn ảnh
+  socket.on("send_image", async (data) => {
+    const { userId, imageUrl, publicId, caption } = data;
+    if (!userId || !imageUrl || !publicId) return;
+
+    const res = await handleUserImageMessageService(
+      userId,
+      imageUrl,
+      publicId,
+      caption,
+    );
+    // Khi tin nhắn đã được gửi, báo cho admin là khách đã ngừng gõ
+    if (res.EC === 0 && res.DT.conversation?.id) {
+      io.to("admin_group").emit("user_typing", {
+        userId: userId,
+        isTyping: false,
+      });
+    }
+    if (res.EC === 0) {
+      // Emit cho tất cả thiết bị của chính user
       io.to(`customer_${userId}`).emit("receive_message", res.DT.message);
 
       // Bắn toàn bộ cho admin_group để nhảy chấm đỏ Badge và hiển thị tin mới

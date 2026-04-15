@@ -39,6 +39,14 @@ export default class messages extends Model {
           type: DataTypes.TEXT,
           allowNull: false,
         },
+        image_url: {
+          type: DataTypes.STRING(500),
+          allowNull: true,
+        },
+        public_id: {
+          type: DataTypes.STRING(255),
+          allowNull: true,
+        },
       },
       {
         sequelize,
