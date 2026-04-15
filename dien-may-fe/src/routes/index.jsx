@@ -8,6 +8,7 @@ import CategoryPage from "../pages/CategoryPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import OrderHistory from '../pages/OrderHistory';
 import Profile from "../pages/Profile"
+import SearchPage from "../pages/SearchPage";
 // Import các trang Admin
 import AdminLayout from "../layouts/AdminLayout"; // Bạn cần tạo layout này
 import AdminProduct from "../pages/AdminProduct";
@@ -34,7 +35,8 @@ export const router = createBrowserRouter([
             { path: "category/:categoryId", element: <CategoryPage /> },
             { path: "checkout", element: <CheckoutPage /> },
             { path: "order-history", element: <OrderHistory /> },
-            { path: "profile", element: <Profile /> }
+            { path: "profile", element: <Profile /> },
+            { path: "search", element: <SearchPage /> }
         ]
     },
     // NHÁNH ADMIN (Quản lý hệ thống)

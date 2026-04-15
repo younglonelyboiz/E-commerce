@@ -8,4 +8,8 @@ const getCartApi = () => {
   return axios.get("/cart");
 };
 
-export { addToCartApi, getCartApi };
+const removeFromCartApi = (productId) => {
+  return axios.delete(`/cart/remove/${productId}`);
+};
+
+export { addToCartApi, getCartApi, removeFromCartApi };

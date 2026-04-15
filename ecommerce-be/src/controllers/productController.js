@@ -7,6 +7,7 @@ import {
   deleteProduct,
   updateProduct,
   getProductsForAdmin,
+  getSearchSuggestions, // Import hàm mới
   getProductDetailById,
 } from "../services/productService.js";
 import { sendResponse } from "../utils/apiResponse.js";
@@ -74,6 +75,17 @@ export const getProductDetail = async (req, res) => {
   } catch (error) {
     console.error(">>> Controller getProductDetail Error:", error);
     return sendResponse(res, -1, "Lỗi server", null);
+  }
+};
+
+export const getSuggestions = async (req, res) => {
+  try {
+    const { search, limit } = req.query;
+    const result = await getSearchSuggestions({ search, limit });
+    return sendResponse(res, result.EC, result.EM, result.DT);
+  } catch (error) {
+    console.error(">>> Controller getSuggestions Error:", error);
+    return sendResponse(res, -1, "Lỗi hệ thống khi lấy gợi ý tìm kiếm", null);
   }
 };
 

@@ -81,7 +81,7 @@ const CategoryPage = () => {
         <div className="category-page container mt-4">
             {/* 1. TOP 4 BÁN CHẠY NHẤT */}
             {hotProducts.length > 0 && (
-                <section className="hot-section mb-5 p-3 rounded shadow-sm bg-white border-top border-danger border-4">
+                <section className="hot-section mb-5 p-3 rounded shadow-sm bg-white border-top border-1">
                     <h4 className="title-hot fw-bold mb-3 text-danger">
                         <i className="bi bi-graph-up-arrow me-2"></i>BÁN CHẠY NHẤT
                     </h4>

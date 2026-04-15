@@ -9,6 +9,7 @@ import {
   updateProductbyID,
   getSaleList, // Tên hàm xử lý logic top-sale ở Controller
   getSalingList,
+  getSuggestions, // Import hàm mới cho gợi ý tìm kiếm
   readProductsForAdmin, // Tên hàm xử lý logic top-selling ở Controller
   getProductDetail, // Thêm mới: Lấy chi tiết sản phẩm theo ID
 } from "../controllers/productController.js";
@@ -30,7 +31,11 @@ import {
 
 import { readAllRoles, updateRole } from "../controllers/roleController.js";
 
-import { addToCart, getCart } from "../controllers/cartController.js";
+import {
+  addToCart,
+  getCart,
+  removeCartItem,
+} from "../controllers/cartController.js";
 import {
   getUserAddresses,
   addUserAddress,
@@ -73,13 +78,11 @@ const initApiRoutes = (app) => {
     uploadCloud.any()(req, res, (err) => {
       if (err) {
         console.error(">>> [Upload Error]:", err);
-        return res
-          .status(500)
-          .json({
-            EC: -1,
-            EM: "Lỗi upload ảnh: " + (err.message || "Cloudinary error"),
-            DT: err,
-          });
+        return res.status(500).json({
+          EC: -1,
+          EM: "Lỗi upload ảnh: " + (err.message || "Cloudinary error"),
+          DT: err,
+        });
       }
       next();
     });
@@ -147,6 +150,7 @@ const initApiRoutes = (app) => {
 
   router.get("/products", readProducts);
   router.get("/products/:id", getProductDetail);
+  router.get("/products/suggestions", getSuggestions); // Route mới cho gợi ý tìm kiếm
 
   router.get("/role/read", checkUserJWT, checkAdminRole, readAllRoles);
   router.put("/user/update-role", checkUserJWT, checkAdminRole, updateRole);
@@ -161,6 +165,7 @@ const initApiRoutes = (app) => {
   // --- Routes Giỏ hàng ---
   router.post("/cart/add", checkUserJWT, addToCart);
   router.get("/cart", checkUserJWT, getCart);
+  router.delete("/cart/remove/:productId", checkUserJWT, removeCartItem);
 
   // --- Routes Sổ địa chỉ ---
   router.get("/user/addresses", checkUserJWT, getUserAddresses);

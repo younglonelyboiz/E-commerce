@@ -57,7 +57,12 @@ const getProductsWithFilter = async (params) => {
       if (minPrice !== undefined && maxPrice !== undefined) {
         whereCondition.discount_price = { [Op.between]: [minPrice, maxPrice] };
       }
-      if (search) whereCondition.name = { [Op.like]: `%${search}%` };
+      if (search) {
+        whereCondition[Op.or] = [
+          { name: { [Op.like]: `%${search}%` } },
+          { sku: { [Op.like]: `%${search}%` } },
+        ];
+      }
       if (brandId) whereCondition.brand_id = brandId;
       if (categoryId) whereCondition.category_id = categoryId;
     }
@@ -91,6 +96,47 @@ const getProductsWithFilter = async (params) => {
   } catch (e) {
     console.error(">>> Service Filter Error:", e);
     return { EC: -1, EM: "Lỗi service filter", DT: "" };
+  }
+};
+
+const getSearchSuggestions = async (params) => {
+  try {
+    const { search, limit = 5 } = params;
+
+    if (!search || search.trim().length === 0) {
+      return { EC: 0, EM: "Không có từ khóa tìm kiếm", DT: [] };
+    }
+
+    const products = await db.products.findAll({
+      attributes: ["id", "name", "slug", "discount_price", "regular_price"],
+      where: {
+        name: { [Op.iLike]: `${search.trim()}%` }, // Tìm kiếm theo tiền tố, không phân biệt hoa thường
+        quantity: { [Op.gt]: 0 }, // Chỉ hiển thị sản phẩm còn hàng
+        status: "active", // Chỉ hiển thị sản phẩm đang hoạt động
+      },
+      include: [
+        {
+          model: db.product_images,
+          as: "product_images",
+          where: { is_thumbnail: 1 },
+          required: false,
+          attributes: ["url"],
+        },
+      ],
+      order: [
+        ["name", "ASC"], // Sắp xếp theo tên
+      ],
+      limit: +limit,
+    });
+
+    return {
+      EC: 0,
+      EM: "OK",
+      DT: products.map((p) => formatProductThumbnail(p)),
+    };
+  } catch (e) {
+    console.error(">>> Service getSearchSuggestions Error:", e);
+    return { EC: -1, EM: "Lỗi service gợi ý tìm kiếm", DT: [] };
   }
 };
 
@@ -574,7 +620,12 @@ const getProductsForAdmin = async (params) => {
     };
 
     let whereCondition = {};
-    if (search) whereCondition.name = { [Op.like]: `%${search}%` };
+    if (search) {
+      whereCondition[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { sku: { [Op.like]: `%${search}%` } },
+      ];
+    }
     if (brandId) whereCondition.brand_id = brandId;
     if (categoryId) whereCondition.category_id = categoryId;
 
@@ -632,6 +683,7 @@ const getProductDetailById = async (id) => {
 
 export {
   getProductsWithFilter,
+  getSearchSuggestions, // Export hàm mới
   getTopSaleProducts,
   getTopSellingProducts,
   getProductsForAdmin,

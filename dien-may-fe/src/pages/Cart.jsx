@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getCartApi } from '../services/cartService';
+import { getCartApi, removeFromCartApi } from '../services/cartService';
 import { UserContext } from '../context/UserContext';
+import { toast } from 'react-toastify';
 
 function Cart() {
     const navigate = useNavigate();
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { user } = useContext(UserContext);
+    const { user, setCartCount } = useContext(UserContext);
     const [selectedItems, setSelectedItems] = useState([]); // Lưu ID các sản phẩm được tích chọn
 
     useEffect(() => {
@@ -25,6 +26,10 @@ function Cart() {
             let res = await getCartApi();
             if (res && res.EC === 0) {
                 setCartItems(res.DT || []);
+                if (setCartCount) {
+                    const totalQty = (res.DT || []).reduce((sum, item) => sum + item.quantity, 0);
+                    setCartCount(totalQty);
+                }
             }
         } catch (error) {
             console.error("Lỗi fetch cart:", error);
@@ -87,6 +92,22 @@ function Cart() {
     const totalDiscount = totalRegularPrice - totalPrice;
     const shippingFee = selectedCartItems.length === 0 ? 0 : (totalPrice >= 500000 ? 0 : 30000); // Miễn phí giao hàng từ 500k, không chọn thì phí ship = 0
     const finalTotal = totalPrice + shippingFee;
+
+    // Xử lý xóa sản phẩm
+    const handleRemoveItem = async (productId) => {
+        try {
+            let res = await removeFromCartApi(productId);
+            if (res && res.EC === 0) {
+                toast.success(res.EM || "Đã xóa sản phẩm khỏi giỏ hàng");
+                setSelectedItems(prev => prev.filter(id => id !== productId)); // Bỏ tick nếu đang tick
+                fetchCart(); // Gọi lại để load dữ liệu và cập nhật số lượng badge
+            } else {
+                toast.error(res?.EM || "Xóa thất bại");
+            }
+        } catch (error) {
+            toast.error("Lỗi khi xóa sản phẩm");
+        }
+    };
 
     // Xử lý ấn nút Đặt hàng
     const handleCheckout = () => {
@@ -189,7 +210,11 @@ function Cart() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <button className="btn btn-link text-danger position-absolute top-50 end-0 translate-middle-y me-3" title="Xóa">
+                                        <button
+                                            className="btn btn-link text-danger position-absolute top-50 end-0 translate-middle-y me-3"
+                                            title="Xóa"
+                                            onClick={() => handleRemoveItem(product.id)}
+                                        >
                                             <i className="bi bi-trash fs-5"></i>
                                         </button>
                                     </div>

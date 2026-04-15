@@ -86,4 +86,33 @@ const getCartByUserId = async (userId) => {
   }
 };
 
-export { addProductToCart, getCartByUserId };
+const removeProductFromCart = async (userId, productId) => {
+  try {
+    // Tìm giỏ hàng của user
+    let cart = await db.carts.findOne({
+      where: { user_id: userId },
+    });
+
+    if (!cart) {
+      return { EC: 1, EM: "Giỏ hàng không tồn tại", DT: "" };
+    }
+
+    // Xóa sản phẩm khỏi giỏ hàng
+    const deletedRow = await db.cart_products.destroy({
+      where: {
+        cart_id: cart.id,
+        product_id: productId,
+      },
+    });
+
+    if (deletedRow) {
+      return { EC: 0, EM: "Xóa sản phẩm khỏi giỏ hàng thành công", DT: "" };
+    }
+    return { EC: 1, EM: "Không tìm thấy sản phẩm trong giỏ hàng", DT: "" };
+  } catch (error) {
+    console.error(">>> Lỗi ở cartService (removeProduct):", error);
+    return { EC: -1, EM: `Lỗi hệ thống: ${error.message}`, DT: "" };
+  }
+};
+
+export { addProductToCart, getCartByUserId, removeProductFromCart };

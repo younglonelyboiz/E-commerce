@@ -1,7 +1,7 @@
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import "./Header.scss";
 import CategoryMenu from "./CategoryMenu.jsx";
-import { useEffect, useState, useContext } from "react"; // Thêm useContext
 import { getCategories } from "../services/categoryService.js";
 import { UserContext } from "../context/UserContext.jsx"; // Import Context
 import { logoutUser } from "../services/userService.js"; // Import hàm logout API
@@ -9,12 +9,30 @@ import { getCartApi } from "../services/cartService.js"; // Import API lấy gi�
 import { toast } from "react-toastify";
 import { getUserOrdersApi } from "../services/userOrderService.js";
 
+import axios from "../setup/axios"; // Import axios để gọi API gợi ý
+
+// Debounce utility function
+const debounce = (func, delay) => {
+    let timeout;
+    return function executed(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, delay);
+    };
+};
+
 function Header() {
     const [categories, setCategories] = useState([]);
     const { user, logoutContext, cartCount, setCartCount } = useContext(UserContext); // Lấy thêm setCartCount
     const navigate = useNavigate();
     const location = useLocation();
     const [activeOrderCount, setActiveOrderCount] = useState(0);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchSuggestions, setSearchSuggestions] = useState([]); // Gợi ý tìm kiếm
+    const [showSuggestions, setShowSuggestions] = useState(false); // Hiển thị/ẩn gợi ý
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -95,6 +113,45 @@ function Header() {
         }
     };
 
+    // Hàm gọi API gợi ý tìm kiếm (debounced)
+    const fetchSuggestions = useCallback(
+        debounce(async (keyword) => {
+            if (keyword.trim().length > 0) {
+                try {
+                    const res = await axios.get(`/products/suggestions?search=${encodeURIComponent(keyword.trim())}`);
+                    if (res && res.EC === 0) {
+                        setSearchSuggestions(res.DT || []);
+                        setShowSuggestions(true);
+                    } else {
+                        setSearchSuggestions([]);
+                        setShowSuggestions(false);
+                    }
+                } catch (error) {
+                    console.error("Lỗi fetch suggestions:", error);
+                    setSearchSuggestions([]);
+                    setShowSuggestions(false);
+                }
+            } else {
+                setSearchSuggestions([]);
+                setShowSuggestions(false);
+            }
+        }, 300), // Debounce 300ms
+        []
+    );
+
+    // Xử lý thay đổi input tìm kiếm
+    const handleSearchInputChange = (e) => {
+        const value = e.target.value;
+        setSearchQuery(value);
+        fetchSuggestions(value); // Gọi hàm debounced
+    };
+
+    // Xử lý sự kiện tìm kiếm
+    const handleSearch = (e) => {
+        navigate(`/search?keyword=${encodeURIComponent(searchQuery.trim())}`);
+        setShowSuggestions(false); // Ẩn gợi ý khi tìm kiếm
+    };
+
     return (
         <header className="main-header">
             {/* Top bar */}
@@ -119,15 +176,39 @@ function Header() {
 
                     {/* Search */}
                     <div className="flex-grow-1 mx-3">
-                        <div className="input-group">
-                            <span className="input-group-text bg-white border-0">
+                        <div className="input-group position-relative"> {/* Thêm position-relative */}
+                            <span
+                                className="input-group-text bg-white border-0"
+                                style={{ cursor: 'pointer' }}
+                                onClick={handleSearch}
+                            >
                                 <i className="bi bi-search"></i>
                             </span>
                             <input
                                 type="text"
                                 className="form-control border-0"
                                 placeholder="Bạn muốn mua gì hôm nay?"
+                                value={searchQuery}
+                                onChange={handleSearchInputChange} // Dùng hàm mới
+                                onKeyDown={handleSearch}
+                                onFocus={() => searchQuery.trim().length > 0 && searchSuggestions.length > 0 && setShowSuggestions(true)} // Hiện gợi ý khi focus
+                                onBlur={() => setTimeout(() => setShowSuggestions(false), 100)} // Ẩn gợi ý khi blur (có delay để click vào gợi ý)
                             />
+                            {showSuggestions && searchSuggestions.length > 0 && (
+                                <div className="search-suggestions dropdown-menu show w-100 position-absolute" style={{ top: '100%', left: 0, zIndex: 1000 }}>
+                                    {searchSuggestions.map(product => (
+                                        <Link
+                                            key={product.id}
+                                            to={`/product/${product.slug}`}
+                                            className="dropdown-item d-flex align-items-center py-2"
+                                            onClick={() => setShowSuggestions(false)} // Ẩn gợi ý khi click
+                                        >
+                                            <img src={product.thumbnailUrl || "https://via.placeholder.com/50"} alt={product.name} style={{ width: '40px', height: '40px', objectFit: 'contain', marginRight: '10px' }} />
+                                            <span>{product.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 

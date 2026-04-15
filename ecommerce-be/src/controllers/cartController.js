@@ -1,4 +1,8 @@
-import { addProductToCart, getCartByUserId } from "../services/cartService.js";
+import {
+  addProductToCart,
+  getCartByUserId,
+  removeProductFromCart,
+} from "../services/cartService.js";
 
 const addToCart = async (req, res) => {
   try {
@@ -56,4 +60,29 @@ const getCart = async (req, res) => {
   }
 };
 
-export { addToCart, getCart };
+const removeCartItem = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.userId;
+    if (!userId) {
+      return res.status(200).json({
+        EC: -1,
+        EM: "Lỗi Token: Không tìm thấy ID người dùng!",
+        DT: "",
+      });
+    }
+    const productId = req.params.productId;
+    if (!productId) {
+      return res.status(200).json({ EC: 1, EM: "Thiếu productId", DT: "" });
+    }
+
+    let response = await removeProductFromCart(userId, productId);
+    return res.status(200).json(response);
+  } catch (error) {
+    console.error(">>> Lỗi ở cartController (removeCartItem):", error);
+    return res
+      .status(500)
+      .json({ EC: -1, EM: "Lỗi server (Controller)", DT: "" });
+  }
+};
+
+export { addToCart, getCart, removeCartItem };
