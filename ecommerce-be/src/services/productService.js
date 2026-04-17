@@ -645,7 +645,7 @@ const getProductsForAdmin = async (params) => {
         { model: db.brands, as: "brand", attributes: ["name"] },
         { model: db.categories, as: "category", attributes: ["name"] },
       ],
-      order: sortOptions[sort], // Thực hiện sắp xếp ở đây
+      order: sortOptions[sort] || sortOptions["id_desc"], // Thêm fallback mặc định để tránh lỗi
       distinct: true,
     });
 

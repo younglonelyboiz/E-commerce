@@ -1,0 +1,443 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;600&display=swap');
+
+// ─── TOKENS ───────────────────────────────────────────────
+:root {
+  --adm-bg:           #eef4fb;
+  --adm-surface:      #ffffff;
+  --adm-surface-2:    #f4f8fd;
+  --adm-border:       #dce8f7;
+  --adm-border-2:     #c2d8f2;
+
+  --adm-blue-1:       #1a6fd4;   // primary
+  --adm-blue-2:       #3d8ef0;   // medium
+  --adm-blue-3:       #85b9f8;   // light
+  --adm-blue-soft:    #e8f1fd;   // tint bg
+  --adm-blue-card:    #1a6fd4;   // card accent top strip
+
+  --adm-green:        #17a864;
+  --adm-green-soft:   #e6f7f1;
+  --adm-amber:        #d48a09;
+  --adm-amber-soft:   #fef5e4;
+  --adm-red:          #dc3545;
+  --adm-red-soft:     #fdeeed;
+
+  --adm-text-1:       #0d1f3c;
+  --adm-text-2:       #5272a0;
+  --adm-text-3:       #a0b4ce;
+
+  --adm-shadow-sm:    0 1px 4px rgba(26, 111, 212, 0.08);
+  --adm-shadow-md:    0 4px 20px rgba(26, 111, 212, 0.12);
+  --adm-radius:       14px;
+  --adm-radius-sm:    8px;
+}
+
+// ─── BASE ─────────────────────────────────────────────────
+.adm {
+  font-family: 'Roboto', sans-serif;
+  background: var(--adm-bg);
+  color: var(--adm-text-1);
+  min-height: 100vh;
+  padding: 32px;
+
+  @media (max-width: 768px) { padding: 16px; }
+}
+
+// ─── LAYOUT ───────────────────────────────────────────────
+.adm-grid {
+  display: grid;
+  gap: 18px;
+
+  &--4   { grid-template-columns: repeat(4, 1fr); }
+  &--3-1 { grid-template-columns: 2.6fr 1.4fr; }
+  &--2   { grid-template-columns: 1fr 1fr; }
+
+  @media (max-width: 1200px) {
+    &--4 { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 900px) {
+    &--3-1, &--2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    &--4 { grid-template-columns: 1fr; }
+  }
+}
+
+.adm-section { margin-bottom: 18px; }
+
+// ─── HEADER ───────────────────────────────────────────────
+.adm-header {
+  margin-bottom: 28px;
+
+  &__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  &__title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    color: var(--adm-text-1);
+    margin: 10px 0 4px;
+  }
+
+  &__sub {
+    font-size: .82rem;
+    color: var(--adm-text-2);
+    margin: 0;
+  }
+
+  &__date {
+    font-family: 'Roboto Mono', monospace;
+    font-size: .72rem;
+    color: var(--adm-text-3);
+    padding-top: 4px;
+    letter-spacing: .03em;
+  }
+}
+
+// ─── LIVE BADGE ───────────────────────────────────────────
+.adm-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--adm-blue-soft);
+  border: 1px solid var(--adm-border-2);
+  color: var(--adm-blue-1);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 4px 11px;
+  border-radius: 20px;
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    background: var(--adm-blue-2);
+    border-radius: 50%;
+    animation: admPulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes admPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .4; transform: scale(.8); }
+}
+
+// ─── REFRESH BUTTON ───────────────────────────────────────
+.adm-btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border-2);
+  color: var(--adm-text-2);
+  font-family: 'Roboto', sans-serif;
+  font-size: .78rem;
+  font-weight: 500;
+  padding: 5px 13px;
+  border-radius: var(--adm-radius-sm);
+  cursor: pointer;
+  transition: all .18s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--adm-blue-soft);
+    color: var(--adm-blue-1);
+    border-color: var(--adm-blue-3);
+  }
+
+  &:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+}
+
+// ─── CARD ─────────────────────────────────────────────────
+.adm-card {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius);
+  box-shadow: var(--adm-shadow-sm);
+  overflow: hidden;
+  transition: box-shadow .2s ease, transform .2s ease;
+
+  &:hover {
+    box-shadow: var(--adm-shadow-md);
+    transform: translateY(-2px);
+  }
+
+  &__head {
+    padding: 20px 22px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--adm-text-2);
+  }
+
+  &__body {
+    padding: 14px 22px 22px;
+  }
+}
+
+// ─── METRIC CARD ──────────────────────────────────────────
+.adm-metric {
+  padding: 0;
+  overflow: hidden;
+
+  &__strip {
+    height: 4px;
+    width: 100%;
+  }
+
+  &__inner {
+    padding: 20px 22px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  &__icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--adm-text-2);
+    margin-bottom: 6px;
+  }
+
+  &__value {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: -.03em;
+    color: var(--adm-text-1);
+    line-height: 1.1;
+  }
+
+  &__sub {
+    font-size: .73rem;
+    color: var(--adm-text-3);
+    margin-top: 7px;
+  }
+
+  &__orb {
+    position: absolute;
+    right: -24px;
+    bottom: -24px;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    opacity: .1;
+    pointer-events: none;
+  }
+
+  // Color variants
+  &--blue   .adm-metric__strip    { background: var(--adm-blue-1); }
+  &--blue   .adm-metric__icon-wrap{ background: var(--adm-blue-soft); color: var(--adm-blue-1); }
+  &--blue   .adm-metric__orb      { background: var(--adm-blue-2); }
+
+  &--green  .adm-metric__strip    { background: var(--adm-green); }
+  &--green  .adm-metric__icon-wrap{ background: var(--adm-green-soft); color: var(--adm-green); }
+  &--green  .adm-metric__orb      { background: var(--adm-green); }
+
+  &--amber  .adm-metric__strip    { background: var(--adm-amber); }
+  &--amber  .adm-metric__icon-wrap{ background: var(--adm-amber-soft); color: var(--adm-amber); }
+  &--amber  .adm-metric__orb      { background: var(--adm-amber); }
+
+  &--red    .adm-metric__strip    { background: var(--adm-red); }
+  &--red    .adm-metric__icon-wrap{ background: var(--adm-red-soft); color: var(--adm-red); }
+  &--red    .adm-metric__orb      { background: var(--adm-red); }
+}
+
+// ─── DIVIDER ──────────────────────────────────────────────
+.adm-divider {
+  border: none;
+  border-top: 1px solid var(--adm-border);
+  margin: 0;
+}
+
+// ─── TABLE ────────────────────────────────────────────────
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead th {
+    padding: 10px 16px;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--adm-text-3);
+    background: var(--adm-surface-2);
+    border-bottom: 1px solid var(--adm-border);
+
+    &:first-child { border-radius: 0; }
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--adm-border);
+    transition: background .14s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: var(--adm-surface-2); }
+  }
+
+  td {
+    padding: 11px 16px;
+    font-size: .82rem;
+    color: var(--adm-text-1);
+    vertical-align: middle;
+  }
+}
+
+// ─── TABLE ELEMENTS ───────────────────────────────────────
+.adm-rank {
+  font-family: 'Roboto Mono', monospace;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--adm-text-3);
+  background: var(--adm-surface-2);
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--adm-border);
+
+  &--1 { background: #fef5e4; color: #b8820a; border-color: #f5d78e; }
+  &--2 { background: #f4f6f8; color: #7a8fa8; border-color: #d0dae6; }
+  &--3 { background: #fdf0ea; color: #c07040; border-color: #f0c0a0; }
+}
+
+.adm-product-img {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--adm-radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--adm-border);
+  flex-shrink: 0;
+}
+
+.adm-product-name {
+  font-weight: 500;
+  color: var(--adm-text-1);
+  font-size: .82rem;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adm-sku {
+  font-family: 'Roboto Mono', monospace;
+  font-size: .67rem;
+  color: var(--adm-text-3);
+  margin-top: 2px;
+}
+
+.adm-sold {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 700;
+  font-size: .85rem;
+  color: var(--adm-green);
+}
+
+.adm-brand {
+  font-size: .78rem;
+  color: var(--adm-text-2);
+}
+
+.adm-stock-badge {
+  font-family: 'Roboto Mono', monospace;
+  font-size: .74rem;
+  font-weight: 700;
+  background: var(--adm-red-soft);
+  color: var(--adm-red);
+  border: 1px solid rgba(220, 53, 69, .2);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+// ─── LOADING / ERROR STATES ───────────────────────────────
+.adm-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 12px;
+  font-family: 'Roboto', sans-serif;
+  background: var(--adm-bg);
+  color: var(--adm-text-2);
+  font-size: .82rem;
+}
+
+.adm-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2.5px solid var(--adm-border-2);
+  border-top-color: var(--adm-blue-1);
+  animation: admSpin .7s linear infinite;
+}
+
+@keyframes admSpin { to { transform: rotate(360deg); } }
+
+.adm-error-box {
+  text-align: center;
+  max-width: 360px;
+  padding: 36px 32px;
+  background: var(--adm-surface);
+  border: 1px solid rgba(220, 53, 69, .2);
+  border-radius: var(--adm-radius);
+  box-shadow: var(--adm-shadow-md);
+
+  &__icon  { font-size: 2.2rem; margin-bottom: 14px; }
+  &__title { font-size: 1.05rem; font-weight: 700; color: var(--adm-text-1); margin-bottom: 8px; }
+  &__desc  { font-size: .82rem; color: var(--adm-text-2); margin-bottom: 22px; }
+
+  &__btn {
+    background: var(--adm-red-soft);
+    border: 1px solid rgba(220, 53, 69, .25);
+    color: var(--adm-red);
+    font-family: 'Roboto', sans-serif;
+    font-size: .82rem;
+    font-weight: 600;
+    padding: 9px 22px;
+    border-radius: var(--adm-radius-sm);
+    cursor: pointer;
+    transition: background .16s;
+
+    &:hover { background: rgba(220, 53, 69, .15); }
+  }
+}
+
+// ─── RECHARTS OVERRIDES ───────────────────────────────────
+.adm {
+  .recharts-cartesian-grid-horizontal line { stroke: var(--adm-border); }
+  .recharts-text { fill: var(--adm-text-3) !important; font-size: 11px; font-family: 'Roboto Mono', monospace; }
+  .recharts-legend-item-text { color: var(--adm-text-2) !important; font-size: 11px !important; font-family: 'Roboto', sans-serif; }
+}

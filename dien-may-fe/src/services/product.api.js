@@ -13,13 +13,17 @@ export const getProductDetail = (id) => {
   return axios.get(`/products/${id}`);
 };
 
+export const getSearchSuggestionsApi = (search) => {
+  return axios.get("/products/suggestions", { params: { search } });
+};
+
 /**
  * Lấy chi tiết sản phẩm theo SLUG
  * Dùng cho trang chi tiết người dùng để có URL đẹp
  */
 export const getProductBySlug = (slug) => {
   return axios.get("/products", {
-    params: { slug, limit: 1 }
+    params: { slug, limit: 1 },
   });
 };
 

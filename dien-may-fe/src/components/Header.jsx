@@ -8,8 +8,7 @@ import { logoutUser } from "../services/userService.js"; // Import hàm logout A
 import { getCartApi } from "../services/cartService.js"; // Import API lấy giỏ hàng
 import { toast } from "react-toastify";
 import { getUserOrdersApi } from "../services/userOrderService.js";
-
-import axios from "../setup/axios"; // Import axios để gọi API gợi ý
+import { getSearchSuggestionsApi } from "../services/product.api.js";
 
 // Debounce utility function
 const debounce = (func, delay) => {
@@ -118,7 +117,7 @@ function Header() {
         debounce(async (keyword) => {
             if (keyword.trim().length > 0) {
                 try {
-                    const res = await axios.get(`/products/suggestions?search=${encodeURIComponent(keyword.trim())}`);
+                    const res = await getSearchSuggestionsApi(keyword.trim());
                     if (res && res.EC === 0) {
                         setSearchSuggestions(res.DT || []);
                         setShowSuggestions(true);

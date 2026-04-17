@@ -124,7 +124,7 @@ function Home() {
                 <div className="section-block mb-5">
                     <div className="section-header d-flex justify-content-between align-items-center mb-3">
                         <h2 className="section-title text-danger">
-                            <i className="bi bi-lightning-fill"></i> FLASH SALE
+                            <i className="bi bi-lightning-fill"></i> FLASH SALE (CHECK THANH TOÁN QR)
                         </h2>
                         {/* <Link to="/flash-sale" className="view-all text-decoration-none">
                             Xem tất cả <i className="bi bi-chevron-right"></i>

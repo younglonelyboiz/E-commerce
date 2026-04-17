@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import axios from '../setup/axios'; // Nhúng file cấu hình axios có sẵn của bạn
+import { getCategories } from '../services/categoryService';
+import { getProducts } from '../services/product.api';
 
 function SearchPage() {
     const [searchParams] = useSearchParams();
@@ -20,7 +21,7 @@ function SearchPage() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await axios.get('/categories');
+                const res = await getCategories();
                 if (res && res.EC === 0) {
                     setCategories(res.DT || []);
                 }
@@ -41,13 +42,13 @@ function SearchPage() {
             setLoading(true);
             try {
                 // Xây dựng chuỗi truy vấn (query string) dựa trên các bộ lọc
-                let query = `/products?limit=${limit}&sort=${sortOption}`;
-                if (keyword.trim()) query += `&search=${encodeURIComponent(keyword.trim())}`;
-                if (selectedCategory) query += `&categoryId=${selectedCategory}`;
-                if (priceRange.min !== '') query += `&minPrice=${priceRange.min}`;
-                if (priceRange.max !== '') query += `&maxPrice=${priceRange.max}`;
+                let params = { limit: limit, sort: sortOption };
+                if (keyword.trim()) params.search = keyword.trim();
+                if (selectedCategory) params.categoryId = selectedCategory;
+                if (priceRange.min !== '') params.minPrice = priceRange.min;
+                if (priceRange.max !== '') params.maxPrice = priceRange.max;
 
-                const res = await axios.get(query);
+                const res = await getProducts(params);
                 if (res && res.EC === 0) {
                     setProducts(res.DT.products || []);
                     setTotalRows(res.DT.totalRows || 0); // Lưu lại tổng số sản phẩm tìm được

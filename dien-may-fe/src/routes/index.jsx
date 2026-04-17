@@ -11,13 +11,13 @@ import Profile from "../pages/Profile"
 import SearchPage from "../pages/SearchPage";
 // Import các trang Admin
 import AdminLayout from "../layouts/AdminLayout"; // Bạn cần tạo layout này
+import AdminDashboard from "../pages/AdminDashboard"; // Thêm dòng này
 import AdminProduct from "../pages/AdminProduct";
 import AdminUsers from "../pages/AdminUsers";
 import AdminOrders from "../pages/AdminOrders";
 import AdminReviews from "../pages/AdminReviews"; // Import trang quản lý review
 import AdminChat from "../pages/AdminChat"; // Import trang Chat cho Admin
 import UserDetail from "../pages/UserDetail";
-// import AdminDashboard from "../pages/AdminDashboard";
 import App from "../App";
 import AdminRoute from "../routes/AdminRoute";
 
@@ -49,6 +49,14 @@ export const router = createBrowserRouter([
             </AdminRoute>
         ),
         children: [
+            {
+                index: true, // Khi truy cập "/admin" sẽ tự động load trang Dashboard này
+                element: <AdminDashboard />
+            },
+            {
+                path: "dashboard", // Khi truy cập "/admin/dashboard" cũng ra trang này
+                element: <AdminDashboard />
+            },
             {
                 path: "products",
                 element: <AdminProduct />,

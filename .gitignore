@@ -6,7 +6,6 @@ build
 crawl/dataCellPhone/*.json
 
 
-
 venv/
 .venv/
 env/

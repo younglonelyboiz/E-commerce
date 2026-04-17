@@ -71,6 +71,8 @@ import {
   uploadChatImage,
 } from "../controllers/chatController.js";
 
+import { getDashboardData } from "../controllers/dashboardController.js";
+
 const initApiRoutes = (app) => {
   const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
 
@@ -133,6 +135,14 @@ const initApiRoutes = (app) => {
     checkUserJWT,
     checkAdminRole,
     changeOrderStatus,
+  );
+
+  // --- Routes Dashboard (Admin) ---
+  router.get(
+    "/admin/dashboard",
+    checkUserJWT,
+    checkAdminRole,
+    getDashboardData,
   );
 
   // --- Routes Quản lý Đánh giá (Admin) ---

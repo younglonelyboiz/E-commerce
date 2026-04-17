@@ -232,6 +232,8 @@ const AdminProduct = () => {
                             <option value="id_desc">Mới nhất</option>
                             <option value="price_asc">Giá tăng dần</option>
                             <option value="price_desc">Giá giảm dần</option>
+                            <option value="stock_asc">Tồn kho ít nhất</option>
+                            <option value="stock_desc">Tồn kho nhiều nhất</option>
                         </select>
                     </div>
                 </div>
@@ -261,7 +263,7 @@ const AdminProduct = () => {
                             </tr>
                         ) : products.length > 0 ? (
                             products.map(item => (
-                                <tr key={item.id}>
+                                <tr key={item.id} className={item.quantity === 0 ? 'table-danger' : ''}>
                                     <td className="ps-4 text-muted small">#{item.id}</td>
                                     <td>
                                         <div className="d-flex align-items-center">

@@ -87,6 +87,8 @@ const AdminChat = () => {
                     return c;
                 }));
                 if (activeConvRef.current && activeConvRef.current.id === data.conversation?.id) {
+                    // Cập nhật activeConv khi conversation được takeover hoặc có tin nhắn mới
+                    setActiveConv(prev => prev ? { ...prev, ...data.conversation, last_message: data.message } : null);
                     setMessages(prev => [...prev, data.message]);
                 }
             });
@@ -189,8 +191,22 @@ const AdminChat = () => {
     // Thực thi Takeover (Cướp quyền)
     const handleTakeOver = () => {
         if (!socket || !activeConv) return;
+
+        // Cập nhật activeConv ngay lập tức với admin ID mới
+        const adminId = user.id || user.account?.id;
+        setActiveConv(prev => prev ? {
+            ...prev,
+            assignee_id: adminId,
+            assigned_at: new Date()
+        } : null);
+
+        // Cập nhật conversations list
+        setConversations(prev => prev.map(c =>
+            c.id === activeConv.id ? { ...c, assignee_id: adminId, assigned_at: new Date() } : c
+        ));
+
         socket.emit("admin_takeover", {
-            newAdminId: user.id || user.account?.id,
+            newAdminId: adminId,
             conversationId: activeConv.id,
             newAdminName: user.userName || "Admin",
             userId: activeConv.user_id || activeConv.customer?.id
