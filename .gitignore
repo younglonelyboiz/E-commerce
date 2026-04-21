@@ -24,3 +24,8 @@ crawl/profile*/
 
 *.log
 crawl/__pycache__/
+
+
+*.sqlite3
+*.bin
+*.json
