@@ -6,10 +6,8 @@ export default class users extends Model {
       {
         id: {
           type: DataTypes.INTEGER,
-          allowNull: false,
           primaryKey: true,
           autoIncrement: true,
-          defaultValue: null,
         },
         email: {
           type: DataTypes.STRING(255),
