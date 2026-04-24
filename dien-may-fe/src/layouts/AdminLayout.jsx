@@ -2,15 +2,34 @@ import React, { useContext } from 'react';
 import { Outlet, Link, NavLink, useNavigate } from 'react-router-dom';
 import './AdminLayout.scss';
 import { UserContext } from '../context/UserContext';
+import { logoutUser } from '../services/userService';
+import { toast } from 'react-toastify';
 
 const AdminLayout = () => {
 
     const { logoutContext } = useContext(UserContext);
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        logoutContext(); // Xóa context
-        navigate('/login'); // Chuyển hướng về trang login
+    const handleLogout = async () => {
+        try {
+            let res = await logoutUser();
+            if (res && +res.EC === 0) {
+                logoutContext();
+                toast.success("Đăng xuất thành công!");
+                navigate('/login');
+            } else {
+                toast.error(res.EM || "Lỗi khi đăng xuất");
+            }
+        } catch (error) {
+            console.error(error);
+            if (error?.response?.status === 401) {
+                logoutContext();
+                toast.success("Đăng xuất thành công!");
+                navigate('/login');
+            } else {
+                toast.error("Lỗi kết nối server!");
+            }
+        }
     };
 
     return (

@@ -46,6 +46,9 @@ export const UserProvider = ({ children }) => {
                 setUser(prev => ({ ...prev, isLoading: false }));
             }
         } catch (error) {
+            if (error?.response?.status === 401) {
+                logoutContext(); // Xóa user cũ
+            }
             setUser(prev => ({ ...prev, isLoading: false }));
         }
     };
