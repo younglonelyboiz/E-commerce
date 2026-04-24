@@ -1,4 +1,4 @@
-import axios from "../setUp/axios";
+import axios from "../setup/axios";
 
 const addToCartApi = (productId, quantity) => {
   return axios.post("/cart/add", { productId, quantity });

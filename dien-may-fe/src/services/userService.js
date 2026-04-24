@@ -1,5 +1,5 @@
 // src/services/userService.js
-import axios from "../setUp/axios";
+import axios from "../setup/axios";
 
 export const registerNewUser = (userData) => {
   return axios.post("/register-user", {

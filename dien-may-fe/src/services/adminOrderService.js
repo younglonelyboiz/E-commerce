@@ -1,4 +1,4 @@
-import axios from "../setUp/axios"; // Đường dẫn cấu hình axios của bạn
+import axios from "../setup/axios"; // Đường dẫn cấu hình axios của bạn
 
 export const fetchAllOrders = (page, limit, status, payment_status) => {
   let url = `/admin/orders?page=${page}&limit=${limit}`;

@@ -1,4 +1,4 @@
-import axios from "../setUp/axios"; // Đường dẫn file axios của bạn
+import axios from "../setup/axios"; // Đường dẫn file axios của bạn
 
 export const getUserAddressesApi = () => {
   return axios.get("/user/addresses");

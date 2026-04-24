@@ -1,4 +1,4 @@
-import axios from "../setUp/axios";
+import axios from "../setup/axios";
 
 export const readAllRoles = () => {
   return axios.get("/role/read");
