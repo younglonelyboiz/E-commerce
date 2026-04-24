@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import initModels from "./init-models.js"; // Đảm bảo init-models đã có export default
+import initModels from "./init-models.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -11,14 +11,21 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     dialect: "mysql",
-    port: process.env.DB_PORT || 3306,
+    // TiDB Serverless dùng port 4000, mặc định 3306 sẽ bị từ chối
+    port: process.env.DB_PORT || 4000,
     logging: false,
+    /* ĐOẠN NÀY LÀ CỨU CÁNH CỦA ĐỨC */
+    dialectOptions: {
+      ssl: {
+        minVersion: "TLSv1.2",
+        rejectUnauthorized: true,
+      },
+    },
   },
 );
 
 const db = initModels(sequelize);
 
-// Quan trọng: Export default ở đây
 export default {
   ...db,
   sequelize,
