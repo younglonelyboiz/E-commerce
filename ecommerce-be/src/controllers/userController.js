@@ -100,7 +100,12 @@ export const getUserAccount = async (req, res) => {
 };
 
 export const handleLogout = (req, res) => {
-  res.clearCookie("access_token");
+  res.clearCookie("access_token", {
+    httpOnly: true,
+    secure: true,
+    path: "/",
+    sameSite: "none",
+  });
   return sendResponse(res, 0, "Logout successfully", null);
 };
 
