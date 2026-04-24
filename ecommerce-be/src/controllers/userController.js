@@ -187,6 +187,11 @@ export const handleGoogleCallback = async (req, res) => {
         path: "/",
         sameSite: "none",
       });
+      console.log(">>> Redirecting to:", process.env.FRONTEND_URL);
+
+      return res.redirect(
+        `${process.env.FRONTEND_URL || "https://e-commerce-sbz7.onrender.com"}`,
+      );
       return res.redirect(`${process.env.FRONTEND_URL}`); // Chuyển hướng người dùng về trang chủ
     } else {
       return res.redirect(
