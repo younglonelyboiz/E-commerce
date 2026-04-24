@@ -35,7 +35,9 @@ export const createUser = async (userData) => {
       user_name: userData.user_name,
     };
     const user = await db.users.create({
-      ...data,
+      email: data.email,
+      user_name: data.user_name,
+      password_hash: hashedPassword,
     });
     return {
       EM: "User created successfully",

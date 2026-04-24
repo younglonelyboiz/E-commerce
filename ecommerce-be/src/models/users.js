@@ -9,6 +9,7 @@ export default class users extends Model {
           allowNull: false,
           primaryKey: true,
           autoIncrement: true,
+          defaultValue: null,
         },
         email: {
           type: DataTypes.STRING(255),

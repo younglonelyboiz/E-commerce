@@ -16,10 +16,14 @@ const sequelize = new Sequelize(
     logging: false,
     /* ĐOẠN NÀY LÀ CỨU CÁNH CỦA ĐỨC */
     dialectOptions: {
-      ssl: {
-        minVersion: "TLSv1.2",
-        rejectUnauthorized: true,
-      },
+      // CHỈ BẬT SSL KHI CHẠY TRÊN RENDER (PRODUCTION)
+      ssl:
+        process.env.NODE_ENV === "production"
+          ? {
+              minVersion: "TLSv1.2",
+              rejectUnauthorized: true,
+            }
+          : false, // Ở local thì tắt đi
     },
   },
 );
