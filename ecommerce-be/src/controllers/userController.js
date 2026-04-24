@@ -185,7 +185,7 @@ export const handleGoogleCallback = async (req, res) => {
         secure: process.env.NODE_ENV === "production",
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/",
-        sameSite: "lax",
+        sameSite: "none",
       });
       return res.redirect(`${process.env.FRONTEND_URL}`); // Chuyển hướng người dùng về trang chủ
     } else {
