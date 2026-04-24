@@ -14,17 +14,14 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "nRpZYAeozay5sG3.root",
-    "password": "BqqnH1j8sf5H1EkU",
-    "database": "e-commerce",
-    "host": "gateway01.ap-southeast-1.prod.aws.tidbcloud.com",
-    "port": 4000,
+    "username": "root",
+    "password": "jqVstCCchLhljgZnlznvIeWWdgcEVGaj",
+    "database": "railway",
+    "host": "shuttle.proxy.rlwy.net",
+    "port": 34215,
     "dialect": "mysql",
     "dialectOptions": {
-      "ssl": {
-        "minVersion": "TLSv1.2",
-        "rejectUnauthorized": true
-      }
+      "connectTimeout": 60000
     }
   }
 }
