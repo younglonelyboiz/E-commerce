@@ -67,10 +67,10 @@ export const handleLogin = async (req, res) => {
       // 1. Đóng gói Cookie
       res.cookie("access_token", data.DT.access_token, {
         httpOnly: true,
-        secure: false, // Tạm thời để false để test chắc chắn trên localhost
+        secure: true, // Tạm thời để false để test chắc chắn trên localhost
         maxAge: 3600 * 1000,
         path: "/",
-        sameSite: "lax",
+        sameSite: "none",
       });
 
       // 2. Xóa access_token khỏi dữ liệu trả về để bảo mật tuyệt đối
