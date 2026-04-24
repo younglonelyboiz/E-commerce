@@ -21,7 +21,12 @@ const server = http.createServer(app);
 // 2. Khởi tạo Socket.io với cấu hình CORS đồng nhất với app.js
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: [
+      process.env.FRONTEND_URL,
+      "https://e-commerce-fe-hmfd.onrender.com",
+      "https://e-commerce-fe-hmfd.onrender.com/",
+      "http://localhost:5173",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   },
