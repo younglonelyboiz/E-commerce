@@ -15,16 +15,16 @@ const AdminLayout = () => {
             let res = await logoutUser();
             if (res && +res.EC === 0) {
                 logoutContext();
-                toast.success("Đăng xuất thành công!");
+                toast.success("Về trang chủ!");
                 navigate('/login');
             } else {
-                toast.error(res.EM || "Lỗi khi đăng xuất");
+                toast.error(res.EM || "Lỗi ");
             }
         } catch (error) {
             console.error(error);
             if (error?.response?.status === 401) {
                 logoutContext();
-                toast.success("Đăng xuất thành công!");
+                toast.success("Về trang chủ!");
                 navigate('/login');
             } else {
                 toast.error("Lỗi kết nối server!");
