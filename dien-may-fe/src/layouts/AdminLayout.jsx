@@ -15,17 +15,17 @@ const AdminLayout = () => {
             let res = await logoutUser();
             if (res && +res.EC === 0) {
                 logoutContext();
-                toast.success("Về trang chủ!");
-                navigate('/');
+                toast.success("Đăng xuất thành công!");
+                navigate('/login');
             } else {
-                toast.error(res.EM || "Lỗi ");
+                toast.error(res.EM || "Lỗi khi đăng xuất");
             }
         } catch (error) {
             console.error(error);
             if (error?.response?.status === 401) {
                 logoutContext();
-                toast.success("Về trang chủ!");
-                navigate('/');
+                toast.success("Đăng xuất thành công!");
+                navigate('/login');
             } else {
                 toast.error("Lỗi kết nối server!");
             }

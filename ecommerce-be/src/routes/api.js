@@ -227,7 +227,7 @@ const initApiRoutes = (app) => {
   router.get("/account", checkUserJWT, getUserAccount);
   router.post("/login", handleLogin);
   router.post("/register-user", registerNewUser); // Route kiểm tra JWT
-  router.post("/logout", checkUserJWT, handleLogout);
+  router.post("/logout", handleLogout);
   router.put("/user/change-password", checkUserJWT, changePassword); // Endpoint đổi pass
 
   router.get("/user/profile", checkUserJWT, (req, res) => {
