@@ -11,35 +11,47 @@ import initSocket from "./sockets/index.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 8080;
-const HOST = "0.0.0.0"; // Lắng nghe trên tất cả các giao diện mạng
+const HOST = "0.0.0.0";
 
 connection();
 
-// 1. Khởi tạo HTTP Server bọc Express App
 const server = http.createServer(app);
 
-// 2. Khởi tạo Socket.io với cấu hình CORS đồng nhất với app.js
+//  Normalize origins function
+const normalizeOrigin = (origin) => {
+  if (!origin) return "";
+  return origin.replace(/\/$/, "").trim();
+};
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://e-commerce-fe-hmfd.onrender.com", // ← Xóa dấu /
+  process.env.FRONTEND_URL,
+]
+  .filter(Boolean)
+  .map(normalizeOrigin);
+
 const io = new Server(server, {
   cors: {
-    origin: [
-      process.env.FRONTEND_URL,
-      "https://e-commerce-fe-hmfd.onrender.com",
-      "https://e-commerce-fe-hmfd.onrender.com/",
-      "http://localhost:5173",
-    ],
+    origin: function (origin, callback) {
+      const normalizedOrigin = normalizeOrigin(origin);
+      if (!origin || allowedOrigins.includes(normalizedOrigin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
+    allowEIO3: true, //  Support cả EIO3 và EIO4
   },
 });
 
-// 3. Nhúng biến `io` vào Express App để sử dụng ở mọi Controller (như paymentController)
 app.set("io", io);
 
-// 4. Khởi tạo toàn bộ luồng sự kiện Socket (Chat, Payment...)
-// Truyền trực tiếp instance `io` sang thư mục sockets quản lý
 initSocket(io);
 
-// 5. Cronjob: Tự động hủy đơn quá 24h (Chạy ngầm mỗi 1 tiếng)
+// 5. Cronjob
 setInterval(async () => {
   try {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -47,28 +59,23 @@ setInterval(async () => {
       where: {
         payment_method: "BANK",
         payment_status: "pending",
-        order_status: "pending", // Chỉ hủy đơn đang chờ
+        order_status: "pending",
         order_date: {
           [Op.lt]: oneDayAgo,
         },
       },
     });
 
-    for (const order of expiredOrders) {
-      // Gọi lại hàm hủy đơn -> Tự động hoàn kho!
-      await updateOrderStatusService(
-        order.id,
-        "cancelled",
-        "Hệ thống tự động hủy: Quá hạn thanh toán 24h",
-      );
-      console.log(`[Auto-Cancel] Hủy tự động đơn hàng ${order.code}`);
+    for (let order of expiredOrders) {
+      await updateOrderStatusService(order.code, "cancelled");
     }
   } catch (error) {
-    console.error("[Auto-Cancel] Lỗi quét đơn quá hạn:", error);
+    console.error(">>> Cronjob Error:", error);
   }
 }, 60 * 60 * 1000);
 
-// 6. Chạy ứng dụng bằng server.listen thay vì app.listen
 server.listen(PORT, HOST, () => {
-  console.log(`Server running at http://${HOST}:${PORT}`);
+  console.log(` Server running at http://${HOST}:${PORT}`);
+  console.log(` Socket.io listening on ws://${HOST}:${PORT}`);
+  console.log(` Allowed CORS Origins:`, allowedOrigins);
 });
