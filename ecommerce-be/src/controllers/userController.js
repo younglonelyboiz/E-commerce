@@ -145,10 +145,10 @@ export const getGoogleAuthUrl = async (req, res) => {
       // Set Cookie HttpOnly lưu State chống CSRF (Domain BE tự gửi Cookie cho trình duyệt)
       res.cookie("oauth_state", result.DT.state, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 5 * 60 * 1000, // 5 phút
+        secure: true, // Ép lên true vì Render chạy HTTPS
+        maxAge: 5 * 60 * 1000,
         path: "/",
-        sameSite: "lax",
+        sameSite: "none", // BẮT BUỘC phải là none nếu FE và BE khác domain (Render/Vercel)
       });
       // Trả URL về cho Frontend tự Redirect (Đảm bảo Axios không bị lỗi CORS)
       return sendResponse(res, 0, "OK", result.DT.googleAuthUrl);
