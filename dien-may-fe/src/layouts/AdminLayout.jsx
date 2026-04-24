@@ -16,7 +16,7 @@ const AdminLayout = () => {
             if (res && +res.EC === 0) {
                 logoutContext();
                 toast.success("Về trang chủ!");
-                navigate('/login');
+                navigate('/');
             } else {
                 toast.error(res.EM || "Lỗi ");
             }
@@ -25,7 +25,7 @@ const AdminLayout = () => {
             if (error?.response?.status === 401) {
                 logoutContext();
                 toast.success("Về trang chủ!");
-                navigate('/login');
+                navigate('/');
             } else {
                 toast.error("Lỗi kết nối server!");
             }
