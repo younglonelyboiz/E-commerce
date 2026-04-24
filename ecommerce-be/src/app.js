@@ -8,7 +8,10 @@ const app = express();
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://link-frontend-cua-duc.onrender.com",
+    ],
     credentials: true,
   }),
 );
