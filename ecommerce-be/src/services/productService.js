@@ -199,20 +199,19 @@ const getTopSellingProducts = async () => {
         "slug",
         "regular_price",
         "discount_price",
-        // Tính tổng số lượng đã bán từ bảng order_products
         [
           db.sequelize.fn("SUM", db.sequelize.col("order_products.quantity")),
           "totalSold",
         ],
       ],
       where: {
-        quantity: { [Op.gt]: 0 }, // Ẩn sản phẩm hết hàng
+        quantity: { [Op.gt]: 0 },
       },
       include: [
         {
           model: db.order_products,
-          as: "order_products", // Phải khớp với alias trong initModels.js
-          attributes: [], // Không lấy các cột của bảng order_products
+          as: "order_products",
+          attributes: [],
           required: false,
         },
         {
@@ -220,13 +219,22 @@ const getTopSellingProducts = async () => {
           as: "product_images",
           where: { is_thumbnail: 1 },
           required: false,
-          attributes: ["url"],
+          attributes: ["id", "url"], // Nên lấy cả id của ảnh
         },
       ],
-      group: ["products.id"], // Nhóm theo ID sản phẩm để tính tổng
-      order: [[db.sequelize.literal("totalSold"), "DESC"]], // Sắp xếp theo số lượng bán giảm dần
-      limit: 20,
-      subQuery: false, // Quan trọng khi dùng Group By với Limit và Include
+      // SỬA TẠI ĐÂY: Liệt kê đầy đủ các trường
+      group: [
+        "products.id",
+        "products.name",
+        "products.slug",
+        "products.regular_price",
+        "products.discount_price",
+        "product_images.id",
+        "product_images.url",
+      ],
+      order: [[db.sequelize.literal("totalSold"), "DESC"]],
+      limit: 5,
+      subQuery: false,
     });
 
     return {
