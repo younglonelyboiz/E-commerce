@@ -1,4 +1,4 @@
-from src.database.chroma_client import get_collection
+from database.chroma_client import get_collection
 
 class VectorRepository:
     def __init__(self):

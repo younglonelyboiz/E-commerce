@@ -1,6 +1,6 @@
 import chromadb
 from chromadb.utils import embedding_functions
-from src.core.config import settings
+from core.config import settings
 
 # Khởi tạo các biến global để lưu giữ kết nối
 _client = None

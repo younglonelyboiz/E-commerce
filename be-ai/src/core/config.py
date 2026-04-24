@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -12,8 +14,7 @@ class Settings(BaseSettings):
 
     # Cấu hình Pydantic để đọc .env
     model_config = SettingsConfigDict(
-        env_file=".env", 
-        # Cực kỳ quan trọng: Cho phép bỏ qua các biến thừa trong .env không được khai báo ở trên
+        env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env"),      # Cực kỳ quan trọng: Cho phép bỏ qua các biến thừa trong .env không được khai báo ở trên
         extra="ignore" 
     )
 

@@ -1,8 +1,8 @@
 from google import genai
 import json
-from src.repositories.vector_repo import VectorRepository
-from src.utils.search_utils import simple_rerank
-from src.core.config import settings
+from repositories.vector_repo import VectorRepository
+from utils.search_utils import simple_rerank
+from core.config import settings
 
 class RAGService:
     def __init__(self):
@@ -11,7 +11,9 @@ class RAGService:
         self.vector_repo = VectorRepository()
         self.model_name = "gemini-2.5-flash"
 
-    async def get_answer(self, question: str):
+    async def get_answer(self, question: str, history: list = None):
+        if history is None:
+            history = []
         # 1. Tầng Repository: Lấy dữ liệu thô từ Vector DB
         raw_results = self.vector_repo.search_similar(question, n_results=15)
 
@@ -19,18 +21,18 @@ class RAGService:
         docs, metas = simple_rerank(question, raw_results)
 
         # --- ĐOẠN SOI VỊ TRÍ (DEBUG) ---
-        print(f"\n🔍 SOI KÈO RERANK CHO CÂU HỎI: '{question}'")
+        print(f"\n SOI KÈO RERANK CHO CÂU HỎI: '{question}'")
         found_target = False
         for i, (d, m) in enumerate(zip(docs, metas)):
             # Kiểm tra xem có phải iPhone 17 không (hoặc keyword ông muốn soi)
             if "17" in d:
-                print(f"✅ [TOP {i+1}] ID: {m.get('product_id')} - {d[:60]}...")
+                print(f" [TOP {i+1}] ID: {m.get('product_id')} - {d[:60]}...")
                 found_target = True
             elif i < 3: # In thêm top 3 để đối chiếu
                 print(f"   [TOP {i+1}] ID: {m.get('product_id')} - {d[:60]}...")
         
         if not found_target:
-            print("❌ Không thấy con iPhone 17 nào trong Top 15 bốc về!")
+            print(" Không thấy con iPhone 17 nào trong Top 15 bốc về!")
         print("-" * 50)
 
         # 3. CHỐT HẠ: Chỉ lấy Top 3 sau khi đã Rerank để gửi cho AI

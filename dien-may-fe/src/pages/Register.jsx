@@ -80,7 +80,7 @@ const Register = () => {
                         </button>
                         <button className="btn-social zalo">
                             {/* Thay icon Zalo bằng ảnh hoặc text nếu không có icon font */}
-                            <span className="zalo-text">Zalo</span>
+                            <span className="zalo-text">Facebook</span>
                         </button>
                     </div>
                 </div>
