@@ -10,7 +10,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://link-frontend-cua-duc.onrender.com",
+      "https://e-commerce-fe-hmfd.onrender.com",
     ],
     credentials: true,
   }),
