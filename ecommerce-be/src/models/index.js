@@ -11,19 +11,14 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     dialect: "mysql",
-    // TiDB Serverless dùng port 4000, mặc định 3306 sẽ bị từ chối
-    port: process.env.DB_PORT || 4000,
+    // Railway dùng port lẻ (ví dụ 34215), Đức nhớ điền DB_PORT trên Render nhé
+    port: process.env.DB_PORT || 3306,
     logging: false,
-    /* ĐOẠN NÀY LÀ CỨU CÁNH CỦA ĐỨC */
     dialectOptions: {
-      // CHỈ BẬT SSL KHI CHẠY TRÊN RENDER (PRODUCTION)
-      ssl:
-        process.env.NODE_ENV === "production"
-          ? {
-              minVersion: "TLSv1.2",
-              rejectUnauthorized: true,
-            }
-          : false, // Ở local thì tắt đi
+      ssl: {
+        // PHẢI LÀ FALSE thì Railway mới cho kết nối từ Render vào
+        rejectUnauthorized: false,
+      },
     },
   },
 );
