@@ -11,6 +11,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://e-commerce-fe-hmfd.onrender.com",
+      "https://e-commerce-fe-hmfd.onrender.com/",
     ],
     credentials: true,
   }),
