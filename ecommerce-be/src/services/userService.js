@@ -20,6 +20,7 @@ const checkUserEmail = async (email) => {
 
 export const createUser = async (userData) => {
   try {
+    const isEmailAvailable = await checkUserEmail(userData.email);
     if (!checkUserEmail(userData.email)) {
       return {
         EM: "Email is already in use",
