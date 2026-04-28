@@ -27,6 +27,7 @@ import {
   changePassword, // Thêm controller xử lý đổi mật khẩu
   getGoogleAuthUrl,
   handleGoogleCallback,
+  handleQuickLogin, // Thêm dòng này
 } from "../controllers/userController.js";
 
 import { readAllRoles, updateRole } from "../controllers/roleController.js";
@@ -237,6 +238,8 @@ const initApiRoutes = (app) => {
       DT: req.user,
     });
   });
+
+  router.post("/quick-login", handleQuickLogin); // Thêm dòng này
 
   return app.use("/api/v1", router);
 };

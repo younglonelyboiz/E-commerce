@@ -1,10 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Login.scss';
-import { loginApi, getGoogleAuthUrlApi } from '../services/userService';
+import { loginApi, getGoogleAuthUrlApi, quickLoginApi } from '../services/userService';
 import { toast } from 'react-toastify';
-import { UserContext } from '../context/UserContext'; // Import Context
-
+import { UserContext } from '../context/UserContext';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -16,6 +15,7 @@ const Login = () => {
     });
 
     const [showPass, setShowPass] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,7 +23,6 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         const { email, password } = formData;
 
         if (!email || !password) {
@@ -32,27 +31,51 @@ const Login = () => {
         }
 
         try {
+            setLoading(true);
             let res = await loginApi(email, password);
-            console.log(res);
             if (res && +res.EC === 0) {
-                // TRẠM DỪNG 3: Nhận res.DT (chứa userName từ DB) và đẩy vào kho
                 loginContext(res.DT);
-
                 toast.success("Đăng nhập thành công!");
 
-                // Chuyển hướng dựa trên Role
                 if (res.DT.roles && res.DT.roles.includes("ADMIN")) {
                     navigate("/admin");
                 } else {
                     navigate("/");
                 }
             } else {
-                // Sửa lỗi: Chỉ hiện lỗi khi EC khác 0
                 toast.error(res.EM || "Đăng nhập thất bại!");
             }
         } catch (error) {
             console.error(">>> Login Error:", error);
             toast.error("Lỗi kết nối server!");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Quick Login Handler
+    const handleQuickLogin = async (accountType) => {
+        try {
+            setLoading(true);
+            let res = await quickLoginApi(accountType);
+
+            if (res && +res.EC === 0) {
+                loginContext(res.DT);
+                toast.success(`Đăng nhập ${accountType === 'admin' ? 'Admin' : 'Khách hàng'} thành công!`);
+
+                if (res.DT.roles && res.DT.roles.includes("ADMIN")) {
+                    navigate("/admin");
+                } else {
+                    navigate("/");
+                }
+            } else {
+                toast.error(res.EM || "Đăng nhập thất bại!");
+            }
+        } catch (error) {
+            console.error(">>> Quick Login Error:", error);
+            toast.error("Lỗi kết nối server!");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -60,7 +83,7 @@ const Login = () => {
         try {
             let res = await getGoogleAuthUrlApi();
             if (res && +res.EC === 0 && res.DT) {
-                window.location.href = res.DT; // FE thực hiện redirect từ URL backend trả về
+                window.location.href = res.DT;
             } else {
                 toast.error("Không thể kết nối Server Google OAuth!");
             }
@@ -78,18 +101,45 @@ const Login = () => {
                 </div>
 
                 <div className="social-group">
-                    <button className="btn-social google" type="button" onClick={handleGoogleLogin}>
+                    <button className="btn-social google" type="button" onClick={handleGoogleLogin} disabled={loading}>
                         <i className="fa-brands fa-google"></i>
                         <span>Google</span>
                     </button>
-                    <button className="btn-social facebook" type="button">
+                    <button className="btn-social facebook" type="button" disabled={loading}>
                         <i className="fa-brands fa-facebook"></i>
                         <span>Facebook</span>
                     </button>
                 </div>
 
                 <div className="divider">
-                    <span>Hoặc đăng nhập bằng bằng tài khoản đã được đăng kí</span>
+                    <span>Hoặc đăng nhập bằng tài khoản đã được đăng kí</span>
+                </div>
+
+                {/* Quick Login Buttons */}
+                <div className="quick-login-section mb-4">
+                    <p className="text-muted small mb-2">Đăng nhập nhanh (dùng thử):</p>
+                    <div className="d-flex gap-2">
+                        <button
+                            type="button"
+                            className="btn btn-outline-primary flex-grow-1 btn-sm quick-login-btn"
+                            onClick={() => handleQuickLogin('user')}
+                            disabled={loading}
+                            title="Tài khoản khách hàng"
+                        >
+                            <i className="bi bi-person-circle me-1"></i>
+                            {loading ? "Đang tải..." : "Khách hàng"}
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-outline-danger flex-grow-1 btn-sm quick-login-btn"
+                            onClick={() => handleQuickLogin('admin')}
+                            disabled={loading}
+                            title="Tài khoản quản trị"
+                        >
+                            <i className="bi bi-shield-lock me-1"></i>
+                            {loading ? "Đang tải..." : "Admin"}
+                        </button>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="login-form">
@@ -102,6 +152,7 @@ const Login = () => {
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
+                            disabled={loading}
                             required
                         />
                     </div>
@@ -116,9 +167,14 @@ const Login = () => {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
+                                disabled={loading}
                                 required
                             />
-                            <span className="eye-icon" onClick={() => setShowPass(!showPass)}>
+                            <span
+                                className="eye-icon"
+                                onClick={() => setShowPass(!showPass)}
+                                style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+                            >
                                 <i className={`bi ${showPass ? 'bi-eye' : 'bi-eye-slash'}`}></i>
                             </span>
                         </div>
@@ -128,8 +184,8 @@ const Login = () => {
                         <Link to="/forgot-password" title="Quên mật khẩu?" className="forgot-link">Quên mật khẩu?</Link>
                     </div>
 
-                    <button type="submit" className="btn-login-submit">
-                        Đăng nhập
+                    <button type="submit" className="btn-login-submit" disabled={loading}>
+                        {loading ? "Đang xử lý..." : "Đăng nhập"}
                     </button>
                 </form>
 

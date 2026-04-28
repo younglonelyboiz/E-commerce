@@ -6,6 +6,7 @@ import { UserContext } from '../context/UserContext';
 import { retryPaymentLinkApi } from '../services/checkoutService';
 import { io } from 'socket.io-client';
 import ReviewModal from '../components/ReviewModal';
+import CancelOrderModal from '../components/CancelOrderModal';
 
 const OrderHistory = () => {
     const [orders, setOrders] = useState([]);
@@ -24,6 +25,11 @@ const OrderHistory = () => {
     // State cho Modal Đánh giá
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewData, setReviewData] = useState({ orderId: null, product: null, review: null });
+
+    // State cho Modal Xác nhận hủy đơn
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelOrderId, setCancelOrderId] = useState(null);
+    const [cancelOrderCode, setCancelOrderCode] = useState('');
 
     const statusOptions = {
         'pending': { label: 'Chờ xác nhận', color: 'bg-warning text-dark' },
@@ -67,19 +73,28 @@ const OrderHistory = () => {
         }
     };
 
-    const handleCancelOrder = async (orderId) => {
-        if (window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
-            try {
-                const res = await cancelUserOrderApi(orderId);
-                if (res && res.EC === 0) {
-                    toast.success("Hủy đơn hàng thành công!");
-                    fetchUserOrders(); // Tải lại danh sách sau khi hủy
-                } else {
-                    toast.error(res.EM || "Lỗi khi hủy đơn");
-                }
-            } catch (error) {
-                toast.error("Lỗi kết nối khi hủy đơn");
+    const handleCancelOrder = (orderId, orderCode) => {
+        setCancelOrderId(orderId);
+        setCancelOrderCode(orderCode);
+        setShowCancelModal(true);
+    };
+
+    const confirmCancelOrder = async () => {
+        if (!cancelOrderId) return;
+        try {
+            const res = await cancelUserOrderApi(cancelOrderId);
+            if (res && res.EC === 0) {
+                toast.success("Hủy đơn hàng thành công!");
+                fetchUserOrders(); // Tải lại danh sách sau khi hủy
+            } else {
+                toast.error(res.EM || "Lỗi khi hủy đơn");
             }
+        } catch (error) {
+            toast.error("Lỗi kết nối khi hủy đơn");
+        } finally {
+            setShowCancelModal(false);
+            setCancelOrderId(null);
+            setCancelOrderCode('');
         }
     };
 
@@ -252,7 +267,7 @@ const OrderHistory = () => {
                                     <div>
                                         <span className="text-muted small d-block mb-2">Thanh toán: {order.payment_method}</span>
                                         {(order.order_status === 'pending' || order.order_status === 'processing') && (
-                                            <button className="btn btn-sm btn-outline-danger me-2" onClick={() => handleCancelOrder(order.id)}>
+                                            <button className="btn btn-sm btn-outline-danger me-2" onClick={() => handleCancelOrder(order.id, order.code)}>
                                                 Hủy đơn
                                             </button>
                                         )}
@@ -378,6 +393,31 @@ const OrderHistory = () => {
                 </div>
             )}
 
+            {/* Modal Xác nhận Hủy Đơn Hàng */}
+            {showCancelModal && (
+                <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow-lg">
+                            <div className="modal-header bg-light">
+                                <h5 className="modal-title fw-bold text-danger">
+                                    <i className="bi bi-exclamation-triangle-fill me-2"></i> Xác nhận hủy đơn hàng
+                                </h5>
+                                <button type="button" className="btn-close" onClick={() => setShowCancelModal(false)}></button>
+                            </div>
+                            <div className="modal-body py-4">
+                                <p className="mb-0 fs-6">Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác.</p>
+                            </div>
+                            <div className="modal-footer border-top-0 pt-0">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowCancelModal(false)}>Đóng</button>
+                                <button type="button" className="btn btn-danger" onClick={confirmCancelOrder}>
+                                    <i className="bi bi-trash me-1"></i> Xác nhận hủy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal Đánh giá sản phẩm */}
             {showReviewModal && (
                 <ReviewModal
@@ -389,6 +429,17 @@ const OrderHistory = () => {
                     onSuccess={() => {
                         fetchUserOrders(); // Gọi lại API để nút lập tức chuyển sang "Xem đánh giá"
                     }}
+                />
+            )}
+
+            {/* Modal Xác nhận Hủy Đơn Hàng */}
+            {showCancelModal && (
+                <CancelOrderModal
+                    show={showCancelModal}
+                    orderId={cancelOrderId}
+                    orderCode={cancelOrderCode}
+                    onClose={() => setShowCancelModal(false)}
+                    onSuccess={fetchUserOrders}
                 />
             )}
         </div>

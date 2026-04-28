@@ -233,4 +233,38 @@ const handleGoogleCallbackService = async (
   }
 };
 
-export { loginUser, generateGoogleAuthUrlService, handleGoogleCallbackService };
+// Quick Login Service - Hard-coded credentials
+const quickLoginUser = async (accountType) => {
+  try {
+    // 1. Hard-code credentials (chỉ dùng trong development)
+    let email, password;
+
+    if (accountType === "user") {
+      email = "user1@gmail.com";
+      password = "user1";
+    } else if (accountType === "admin") {
+      email = "admin1@gmail.com";
+      password = "admin1";
+    } else {
+      return {
+        EC: 1,
+        EM: "Loại tài khoản không hợp lệ!",
+        DT: "",
+      };
+    }
+
+    // 2. Gọi hàm loginUser bình thường
+    const result = await loginUser({ email, password });
+    return result;
+  } catch (e) {
+    console.log(">>> Error quick login:", e);
+    return { EC: -1, EM: "Lỗi hệ thống...", DT: "" };
+  }
+};
+
+export {
+  loginUser,
+  generateGoogleAuthUrlService,
+  handleGoogleCallbackService,
+  quickLoginUser,
+};

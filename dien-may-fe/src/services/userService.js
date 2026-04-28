@@ -41,3 +41,7 @@ export const readUserDetail = (id) => {
 export const changePasswordApi = (oldPassword, newPassword) => {
   return axios.put("/user/change-password", { oldPassword, newPassword });
 };
+
+export const quickLoginApi = (accountType) => {
+  return axios.post("/quick-login", { accountType });
+};

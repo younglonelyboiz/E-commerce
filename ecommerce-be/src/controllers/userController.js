@@ -10,6 +10,7 @@ import {
   generateGoogleAuthUrlService,
   handleGoogleCallbackService,
 } from "../services/authService.js";
+import { quickLoginUser } from "../services/authService.js";
 
 const checkValidUserData = (data) => {
   console.log(data);
@@ -231,5 +232,42 @@ export const readUserDetail = async (req, res) => {
   } catch (e) {
     console.log(">>> Error in readUserDetail:", e);
     return sendResponse(res, -1, "Error from server", "");
+  }
+};
+
+export const handleQuickLogin = async (req, res) => {
+  try {
+    const { accountType } = req.body;
+
+    // Validation
+    if (!accountType) {
+      return sendResponse(res, 1, "Vui lòng chỉ định loại tài khoản!", null);
+    }
+
+    if (!["user", "admin"].includes(accountType)) {
+      return sendResponse(res, 1, "Loại tài khoản không hợp lệ!", null);
+    }
+
+    // Gọi service
+    let data = await quickLoginUser(accountType);
+
+    if (data && +data.EC === 0) {
+      // 1. Đóng gói Cookie (giống handleLogin)
+      res.cookie("access_token", data.DT.access_token, {
+        httpOnly: true,
+        secure: true,
+        maxAge: 3600 * 1000,
+        path: "/",
+        sameSite: "none",
+      });
+
+      // 2. Xóa access_token khỏi response vì lý do bảo mật
+      delete data.DT.access_token;
+    }
+
+    return sendResponse(res, data.EC, data.EM, data.DT);
+  } catch (error) {
+    console.error("Error quick login:", error);
+    return sendResponse(res, -1, "Lỗi hệ thống", null);
   }
 };

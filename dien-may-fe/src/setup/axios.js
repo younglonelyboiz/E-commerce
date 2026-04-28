@@ -78,7 +78,7 @@ instance.interceptors.response.use(
             "Backend 500 error:",
             error.response?.data || error.message,
           ); // Log error details for debugging
-          toast.error("Hệ thống đang gặp sự cố, vui lòng thử lại sau.");
+          toast.error("Hệ thống đang khởi động ");
           break;
         default:
           toast.error("Đã có lỗi xảy ra.");
