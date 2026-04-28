@@ -9,6 +9,7 @@ const AdminUsers = () => {
     const [listUsers, setListUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
+    const [loading, setLoading] = useState(false);  // ← Thêm dòng này
     const limit = 10;
 
     const [searchInput, setSearchInput] = useState("");
@@ -20,10 +21,15 @@ const AdminUsers = () => {
     }, [currentPage, sortBy, sortOrder]);
 
     const fetchData = async () => {
-        let res = await fetchAllUserByAdmin(currentPage, limit, searchInput, sortBy, sortOrder);
-        if (res && res.EC === 0) {
-            setListUsers(res.DT.users);
-            setTotalPages(res.DT.totalPages);
+        try {
+            setLoading(true);  // ← Thêm
+            let res = await fetchAllUserByAdmin(currentPage, limit, searchInput, sortBy, sortOrder);
+            if (res && res.EC === 0) {
+                setListUsers(res.DT.users);
+                setTotalPages(res.DT.totalPages);
+            }
+        } finally {
+            setLoading(false);  // ← Thêm
         }
     };
 
@@ -117,10 +123,18 @@ const AdminUsers = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {listUsers.length > 0 ? listUsers.map((user) => (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-5">
+                                        <div className="spinner-border text-primary" role="status">
+                                            <span className="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p className="text-muted mt-2 small">Đang tải dữ liệu...</p>
+                                    </td>
+                                </tr>
+                            ) : listUsers.length > 0 ? listUsers.map((user) => (
                                 <tr key={user.id}>
                                     <td>{user.id}</td>
-                                    {/* 4. Thêm sự kiện click vào tên */}
                                     <td
                                         className="fw-bold text-primary"
                                         style={{ cursor: 'pointer' }}
@@ -132,8 +146,7 @@ const AdminUsers = () => {
                                     <td>
                                         {user.roles && user.roles.length > 0 ? (
                                             user.roles.map((role, index) => {
-                                                // Xác định màu sắc dựa trên tên hoặc ID của Role
-                                                let badgeClass = "bg-info"; // Mặc định màu xanh nhạt
+                                                let badgeClass = "bg-info";
                                                 if (role.name === 'Quản trị viên') badgeClass = "bg-danger";
                                                 if (role.name === 'Nhân viên') badgeClass = "bg-warning text-dark";
                                                 if (role.name === 'Người dùng ') badgeClass = "";
@@ -145,7 +158,6 @@ const AdminUsers = () => {
                                                 );
                                             })
                                         ) : (
-                                            // Nếu mảng roles trống hoặc không tồn tại
                                             <span className="badge me-1 bg-info">Người dùng</span>
                                         )}
                                     </td>
@@ -153,7 +165,6 @@ const AdminUsers = () => {
                                         {Number(user.totalSpent).toLocaleString('vi-VN')}đ
                                     </td>
                                     <td>
-                                        {/* 5. Thêm sự kiện click vào nút Chi tiết */}
                                         <button
                                             className="btn btn-sm btn-outline-primary me-2"
                                             onClick={() => handleViewDetail(user.id)}
