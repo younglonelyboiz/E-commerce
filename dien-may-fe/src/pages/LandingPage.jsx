@@ -227,15 +227,15 @@ function Hero() {
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 to="/home"
-                className="no-underline rounded-2xl px-8 py-4 text-lg font-bold text-white shadow-xl transition-transform hover:-translate-y-1 active:scale-95 flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg,#0ea5e9,#0284c7)', boxShadow: '0 12px 32px #0ea5e950' }}
+                className="rounded-2xl px-8 py-4 text-lg font-bold text-white shadow-xl transition-transform hover:-translate-y-1 active:scale-95 flex items-center justify-center no-underline hover:no-underline"
+                style={{ background: 'linear-gradient(135deg,#0ea5e9,#0284c7)', boxShadow: '0 12px 32px #0ea5e950', textDecoration: 'none' }}
               >
                 Khám phá hệ thống
               </Link>
               <Link
                 to="/home"
-                className="no-underline rounded-2xl px-8 py-4 text-lg font-bold transition-all hover:bg-sky-50 flex items-center justify-center border-2"
-                style={{ color: '#0284c7', borderColor: '#bae6fd', background: 'transparent' }}
+                className="rounded-2xl px-8 py-4 text-lg font-bold transition-all hover:-translate-y-1 hover:bg-sky-50 active:scale-95 flex items-center justify-center border-2 no-underline hover:no-underline"
+                style={{ color: '#0284c7', borderColor: '#bae6fd', background: 'transparent', textDecoration: 'none' }}
               >
                 Tìm hiểu công nghệ
               </Link>
@@ -473,9 +473,9 @@ function CTA() {
           </p>
           <div className="mt-12">
             <Link
-              to="/shop"
-              className="no-underline inline-block rounded-2xl px-12 py-5 text-2xl font-black transition-transform hover:scale-105 active:scale-95"
-              style={{ background: 'white', color: '#0369a1', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
+              to="/home"
+              className="inline-block rounded-2xl px-12 py-5 text-2xl font-black transition-transform hover:scale-105 active:scale-95 no-underline hover:no-underline"
+              style={{ background: 'white', color: '#0369a1', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', textDecoration: 'none' }}
             >
               Bắt đầu mua sắm ngay
             </Link>
@@ -501,7 +501,7 @@ function Footer() {
         </p>
         <div className="flex gap-8 text-base font-body font-bold" style={{ color: '#64748b' }}>
           {['Trang chủ', 'Tính năng', 'Công nghệ', 'Liên hệ'].map(l => (
-            <Link key={l} to="/shop" className="no-underline hover:text-sky-500 transition-colors">{l}</Link>
+            <Link key={l} to="/home" className="hover:text-sky-500 transition-colors no-underline hover:no-underline" style={{ textDecoration: 'none' }}>{l}</Link>
           ))}
         </div>
       </div>
