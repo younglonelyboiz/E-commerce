@@ -29,10 +29,9 @@ export const router = createBrowserRouter([
     },
     // NHÁNH CLIENT (Người dùng mua hàng)
     {
-        path: "/home",
         element: <App />,
         children: [
-            { index: true, element: <Home /> },
+            { path: "home", element: <Home /> },
             { path: "product/:slug", element: <ProductDetail /> },
             { path: "cart", element: <Cart /> },
             { path: "login", element: <Login /> },
