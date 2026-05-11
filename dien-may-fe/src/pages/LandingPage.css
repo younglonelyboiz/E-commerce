@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/* ── KEYFRAME ANIMATIONS ───────────────────────────────────────────────────── */
+@keyframes phoneFloat {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-18px) rotate(1deg); }
+}
+
+@keyframes blobPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: .55; }
+  50%       { transform: translate(-50%, -50%) scale(1.12); opacity: .75; }
+}
+
+/* ── CUSTOM DESIGN TOKENS ─────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    --sky-light: #f0f9ff;
+    --sky-soft:  #e0f2fe;
+    --sky-mid:   #7dd3fc;
+    --sky-main:  #0ea5e9;
+    --sky-deep:  #0284c7;
+    --sky-dark:  #0c4a6e;
+    --ink:       #0f172a;
+    --ink-soft:  #334155;
+    --muted:     #64748b;
+    --surface:   #ffffff;
+    --border:    #bae6fd;
+  }
+}
+
+/* ── CUSTOM UTILITIES ─────────────────────────────────────────────────────── */
+@layer utilities {
+  .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .font-body    { font-family: 'DM Sans', sans-serif; }
+  .blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+    animation: blobPulse 6s ease-in-out infinite;
+  }
+}
+
+
+/* ── CUSTOM DESIGN TOKENS ─────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    --sky-light: #f0f9ff;
+    --sky-soft:  #e0f2fe;
+    --sky-mid:   #7dd3fc;
+    --sky-main:  #0ea5e9;
+    --sky-deep:  #0284c7;
+    --sky-dark:  #0c4a6e;
+    --ink:       #0f172a;
+    --ink-soft:  #334155;
+    --muted:     #64748b;
+    --surface:   #ffffff;
+    --border:    #bae6fd;
+  }
+}
+
+/* ── CUSTOM UTILITIES ─────────────────────────────────────────────────────── */
+@layer utilities {
+  .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .font-body    { font-family: 'DM Sans', sans-serif; }
+
+  .text-ink     { color: var(--ink); }
+  .text-muted   { color: var(--muted); }
+  .bg-sky-light { background-color: var(--sky-light); }
+  .bg-surface   { background-color: var(--surface); }
+
+  .blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+}

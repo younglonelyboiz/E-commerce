@@ -53,21 +53,16 @@ const Login = () => {
         }
     };
 
-    // Quick Login Handler
-    const handleQuickLogin = async (accountType) => {
+    // Quick Login Handler — CHỈ cho phép tài khoản khách hàng
+    const handleQuickLogin = async () => {
         try {
             setLoading(true);
-            let res = await quickLoginApi(accountType);
+            let res = await quickLoginApi('user');
 
             if (res && +res.EC === 0) {
                 loginContext(res.DT);
-                toast.success(`Đăng nhập ${accountType === 'admin' ? 'Admin' : 'Khách hàng'} thành công!`);
-
-                if (res.DT.roles && res.DT.roles.includes("ADMIN")) {
-                    navigate("/admin");
-                } else {
-                    navigate("/");
-                }
+                toast.success("Đăng nhập nhanh thành công!");
+                navigate("/");
             } else {
                 toast.error(res.EM || "Đăng nhập thất bại!");
             }
@@ -115,86 +110,76 @@ const Login = () => {
                     <span>Hoặc đăng nhập bằng tài khoản đã được đăng kí</span>
                 </div>
 
-                {/* Quick Login Buttons */}
+                {/* Đăng nhập nhanh — Chỉ tài khoản khách hàng */}
                 <div className="quick-login-section mb-4">
                     <p className="text-muted small mb-2">Đăng nhập nhanh (dùng thử):</p>
                     <div className="d-flex gap-2">
                         <button
                             type="button"
                             className="btn btn-outline-primary flex-grow-1 btn-sm quick-login-btn"
-                            onClick={() => handleQuickLogin('user')}
+                            onClick={handleQuickLogin}
                             disabled={loading}
                             title="Tài khoản khách hàng"
                         >
                             <i className="bi bi-person-circle me-1"></i>
                             {loading ? "Đang tải..." : "Khách hàng"}
                         </button>
-                        <button
-                            type="button"
-                            className="btn btn-outline-danger flex-grow-1 btn-sm quick-login-btn"
-                            onClick={() => handleQuickLogin('admin')}
-                            disabled={loading}
-                            title="Tài khoản quản trị"
-                        >
-                            <i className="bi bi-shield-lock me-1"></i>
-                            {loading ? "Đang tải..." : "Admin"}
-                        </button>
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="login-form">
-                    <div className="mb-3">
-                        <label className="form-label">Email</label>
+                <div className="mb-3">
+                    <label className="form-label">Email</label>
+                    <input
+                        type="text"
+                        className="custom-input"
+                        placeholder="Nhập email của bạn"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        disabled={loading}
+                        required
+                    />
+                </div>
+
+                <div className="mb-3">
+                    <label className="form-label">Mật khẩu</label>
+                    <div className="input-wrapper">
                         <input
-                            type="text"
+                            type={showPass ? "text" : "password"}
                             className="custom-input"
-                            placeholder="Nhập email của bạn"
-                            name="email"
-                            value={formData.email}
+                            placeholder="Nhập mật khẩu"
+                            name="password"
+                            value={formData.password}
                             onChange={handleChange}
                             disabled={loading}
                             required
                         />
+                        <span
+                            className="eye-icon"
+                            onClick={() => setShowPass(!showPass)}
+                            style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+                        >
+                            <i className={`bi ${showPass ? 'bi-eye' : 'bi-eye-slash'}`}></i>
+                        </span>
                     </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Mật khẩu</label>
-                        <div className="input-wrapper">
-                            <input
-                                type={showPass ? "text" : "password"}
-                                className="custom-input"
-                                placeholder="Nhập mật khẩu"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                disabled={loading}
-                                required
-                            />
-                            <span
-                                className="eye-icon"
-                                onClick={() => setShowPass(!showPass)}
-                                style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
-                            >
-                                <i className={`bi ${showPass ? 'bi-eye' : 'bi-eye-slash'}`}></i>
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="d-flex justify-content-between align-items-center mb-4 options-group">
-                        <Link to="/forgot-password" title="Quên mật khẩu?" className="forgot-link">Quên mật khẩu?</Link>
-                    </div>
-
-                    <button type="submit" className="btn-login-submit" disabled={loading}>
-                        {loading ? "Đang xử lý..." : "Đăng nhập"}
-                    </button>
-                </form>
-
-                <div className="login-footer mt-4 text-center">
-                    Bạn chưa có tài khoản? <Link to="/register" className="register-link">Đăng ký ngay</Link>
                 </div>
+
+                <div className="d-flex justify-content-between align-items-center mb-4 options-group">
+                    <Link to="/forgot-password" title="Quên mật khẩu?" className="forgot-link">Quên mật khẩu?</Link>
+                </div>
+
+                <button type="submit" className="btn-login-submit" disabled={loading}>
+                    {loading ? "Đang xử lý..." : "Đăng nhập"}
+                </button>
+            </form>
+
+            <div className="login-footer mt-4 text-center">
+                Bạn chưa có tài khoản? <Link to="/register" className="register-link">Đăng ký ngay</Link>
             </div>
         </div>
-    );
+    </div>
+);
 };
 
 export default Login;

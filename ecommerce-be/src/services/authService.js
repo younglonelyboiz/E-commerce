@@ -233,27 +233,21 @@ const handleGoogleCallbackService = async (
   }
 };
 
-// Quick Login Service - Hard-coded credentials
+// Quick Login Service - CHỈ CHO PHÉP TÀI KHOẢN KHÁCH HÀNG (user)
 const quickLoginUser = async (accountType) => {
   try {
-    // 1. Hard-code credentials (chỉ dùng trong development)
-    let email, password;
-
-    if (accountType === "user") {
-      email = "user1@gmail.com";
-      password = "user1";
-    } else if (accountType === "admin") {
-      email = "admin1@gmail.com";
-      password = "admin1";
-    } else {
+    // BẢO MẬT: Chặn tuyệt đối đăng nhập nhanh bằng admin
+    if (accountType !== "user") {
       return {
         EC: 1,
-        EM: "Loại tài khoản không hợp lệ!",
+        EM: "Chỉ hỗ trợ đăng nhập nhanh bằng tài khoản khách hàng!",
         DT: "",
       };
     }
 
-    // 2. Gọi hàm loginUser bình thường
+    const email = "user1@gmail.com";
+    const password = "user1";
+
     const result = await loginUser({ email, password });
     return result;
   } catch (e) {

@@ -239,13 +239,13 @@ export const handleQuickLogin = async (req, res) => {
   try {
     const { accountType } = req.body;
 
-    // Validation
+    // Validation — CHỈ cho phép đăng nhập nhanh bằng tài khoản khách hàng
     if (!accountType) {
       return sendResponse(res, 1, "Vui lòng chỉ định loại tài khoản!", null);
     }
 
-    if (!["user", "admin"].includes(accountType)) {
-      return sendResponse(res, 1, "Loại tài khoản không hợp lệ!", null);
+    if (accountType !== "user") {
+      return sendResponse(res, 1, "Chỉ hỗ trợ đăng nhập nhanh bằng tài khoản khách hàng!", null);
     }
 
     // Gọi service

@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const useSSL = process.env.DB_SSL === "true";
+
 const sequelize = new Sequelize(
   process.env.DB_NAME,
   process.env.DB_USER,
@@ -14,12 +16,14 @@ const sequelize = new Sequelize(
     // Railway dùng port lẻ (ví dụ 34215), Đức nhớ điền DB_PORT trên Render nhé
     port: process.env.DB_PORT || 3306,
     logging: false,
-    dialectOptions: {
-      ssl: {
-        // PHẢI LÀ FALSE thì Railway mới cho kết nối từ Render vào
-        rejectUnauthorized: false,
+    ...(useSSL && {
+      dialectOptions: {
+        ssl: {
+          // PHẢI LÀ FALSE thì Railway mới cho kết nối từ Render vào
+          rejectUnauthorized: false,
+        },
       },
-    },
+    }),
   },
 );
 

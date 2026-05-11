@@ -20,11 +20,16 @@ import AdminChat from "../pages/AdminChat"; // Import trang Chat cho Admin
 import UserDetail from "../pages/UserDetail";
 import App from "../App";
 import AdminRoute from "../routes/AdminRoute";
+import LandingPage from "../pages/LandingPage";
 
 export const router = createBrowserRouter([
-    // NHÁNH CLIENT (Người dùng mua hàng)
     {
         path: "/",
+        element: <LandingPage />
+    },
+    // NHÁNH CLIENT (Người dùng mua hàng)
+    {
+        path: "/home",
         element: <App />,
         children: [
             { index: true, element: <Home /> },

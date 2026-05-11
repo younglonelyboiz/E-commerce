@@ -1,0 +1,118 @@
+.landing-page-3d {
+  width: 100vw;
+  height: 100vh;
+  background-color: #050505;
+  overflow: hidden;
+
+  // The scroll html container from drei will map to these
+  .html-content {
+    width: 100vw;
+    color: white;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .section {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 10vw;
+    position: relative;
+    pointer-events: none; // let clicks pass through to 3d canvas if needed
+    
+    h1 {
+      font-size: 5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, #555);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      pointer-events: auto;
+    }
+
+    h2 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      pointer-events: auto;
+    }
+
+    p {
+      font-size: 1.2rem;
+      color: #aaa;
+      max-width: 400px;
+      line-height: 1.6;
+      pointer-events: auto;
+    }
+  }
+
+  .s-hero {
+    align-items: center;
+    text-align: center;
+    h1 { font-size: 4rem; }
+    p { max-width: 600px; }
+    
+    .scroll-hint {
+      position: absolute;
+      bottom: 10vh;
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.5;
+      animation: pulse 2s infinite;
+      pointer-events: auto;
+    }
+  }
+
+  .s-right {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .s-left {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .s-center {
+    align-items: center;
+    text-align: center;
+
+    .cta-btn {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: 1rem 3rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #000;
+      background: #fff;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: transform 0.3s ease;
+      pointer-events: auto;
+      
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+  }
+
+  @media (max-width: 768px) {
+    .section {
+      padding: 0 5vw;
+      h1 { font-size: 2.5rem; }
+      h2 { font-size: 2rem; }
+    }
+    .s-right, .s-left {
+      align-items: center;
+      text-align: center;
+      justify-content: flex-end;
+      padding-bottom: 15vh;
+    }
+  }
+}
