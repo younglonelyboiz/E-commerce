@@ -143,7 +143,7 @@ function Cart() {
             <div className="container mt-5 text-center py-5">
                 <i className="bi bi-cart-x text-muted" style={{ fontSize: '4rem' }}></i>
                 <h4 className="mt-3">Giỏ hàng của bạn đang trống</h4>
-                <Link to="/" className="btn btn-outline-primary mt-3 px-4">Tiếp tục mua sắm</Link>
+                <Link to="/home" className="btn btn-outline-primary mt-3 px-4">Tiếp tục mua sắm</Link>
             </div>
         );
     }

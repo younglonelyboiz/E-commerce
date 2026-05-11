@@ -163,7 +163,7 @@ function Header() {
             {/* Main navbar */}
             <nav className="navbar navbar-expand-lg sticky-top py-2">
                 <div className="container px-0">
-                    <Link className="navbar-brand" to="/">Điện Máy HĐ</Link>
+                    <Link className="navbar-brand" to="/home">Điện Máy HĐ</Link>
 
                     <div className="category-wrapper">
                         <div className="btn category-btn">

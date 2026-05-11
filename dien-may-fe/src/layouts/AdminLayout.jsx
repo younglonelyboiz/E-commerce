@@ -60,7 +60,7 @@ const AdminLayout = () => {
                     </NavLink>
                 </nav>
                 <div className="sidebar-footer">
-                    <Link to="/" className="nav-item text-warning">
+                    <Link to="/home" className="nav-item text-warning">
                         <i className="bi bi-house-door me-2"></i> Về trang chủ
                     </Link>
                 </div>
