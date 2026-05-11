@@ -34,7 +34,7 @@ const CheckoutPage = () => {
     useEffect(() => {
         if (!checkoutItems || checkoutItems.length === 0) {
             toast.warning("Chưa có sản phẩm nào để thanh toán!");
-            navigate('/');
+            navigate('/home');
         }
     }, [checkoutItems.length, navigate]);
 

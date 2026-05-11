@@ -40,7 +40,7 @@ const Login = () => {
                 if (res.DT.roles && res.DT.roles.includes("ADMIN")) {
                     navigate("/admin");
                 } else {
-                    navigate("/");
+                    navigate("/home");
                 }
             } else {
                 toast.error(res.EM || "Đăng nhập thất bại!");
@@ -62,7 +62,7 @@ const Login = () => {
             if (res && +res.EC === 0) {
                 loginContext(res.DT);
                 toast.success("Đăng nhập nhanh thành công!");
-                navigate("/");
+                navigate("/home");
             } else {
                 toast.error(res.EM || "Đăng nhập thất bại!");
             }
