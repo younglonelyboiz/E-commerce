@@ -27,10 +27,26 @@ const uploadChatImageApi = (formData) => {
   });
 };
 
+// --- API Dành cho AI Assistant ---
+const getAIApiHistory = () => {
+  return axios.get("/ai-chat/history");
+};
+
+const sendAIApiMessage = (data) => {
+  return axios.post("/ai-chat", data);
+};
+
+const resetAIApiSession = () => {
+  return axios.delete("/ai-chat");
+};
+
 export {
   getUnreadCountApi,
   getUserMessagesApi,
   getConversationsApi,
   getAdminMessagesApi,
   uploadChatImageApi,
+  getAIApiHistory,
+  sendAIApiMessage,
+  resetAIApiSession,
 };

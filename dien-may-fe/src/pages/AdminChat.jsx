@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { getConversationsApi, getAdminMessagesApi, uploadChatImageApi } from '../services/chatService';
 import { toast } from 'react-toastify';
 import './AdminChat.scss';
+import ConfirmModal from '../components/ConfirmModal';
 
 const AdminChat = () => {
     const { user } = useContext(UserContext);
@@ -19,6 +20,8 @@ const AdminChat = () => {
     const adminTypingTimeoutRef = useRef(null);
     const isAdminTypingRef = useRef(false);
     const fileInputRef = useRef(null);
+
+    const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
     const activeConvRef = useRef(activeConv);
     useEffect(() => {
@@ -215,7 +218,12 @@ const AdminChat = () => {
 
     const handleCloseChat = () => {
         if (!socket || !activeConv) return;
-        if (window.confirm("Vấn đề đã được giải quyết? Hoàn tất hội thoại này?")) {
+        setShowCloseConfirm(true);
+    };
+
+    const executeCloseChat = () => {
+        setShowCloseConfirm(false);
+        if (socket && activeConv) {
             socket.emit("admin_close_chat", { conversationId: activeConv.id });
         }
     };
@@ -480,6 +488,16 @@ const AdminChat = () => {
                     )}
                 </div>
             </div>
+
+            <ConfirmModal
+                show={showCloseConfirm}
+                onHide={() => setShowCloseConfirm(false)}
+                onConfirm={executeCloseChat}
+                title="Xác nhận hoàn tất"
+                message="Vấn đề đã được giải quyết? Bạn có chắc chắn muốn Hoàn tất hội thoại này?"
+                confirmText="Hoàn tất"
+                type="success"
+            />
         </div>
     );
 };

@@ -3,7 +3,9 @@ import os
 import sys
 
 # Để script hiểu được folder src
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+be_ai_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(be_ai_dir)
+sys.path.append(os.path.join(be_ai_dir, 'src'))
 from src.database.chroma_client import get_collection
 
 def main():

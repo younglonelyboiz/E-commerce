@@ -24,6 +24,19 @@ services:
       - FRONTEND_URL=http://localhost:5173
     depends_on:
       - db
+      - be-ai  # Node cần be-ai để gọi AI API
+
+  be-ai:
+    build: ./be-ai
+    env_file: ./be-ai/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./be-ai:/app                      # Source code (hot reload)
+      - ./be-ai/chroma_db:/app/chroma_db  # ChromaDB data (persistent, không copy vào image)
+    depends_on:
+      - db
+
 
   frontend:
     build: ./dien-may-fe

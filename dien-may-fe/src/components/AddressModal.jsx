@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import ConfirmModal from './ConfirmModal';
 
 const AddressModal = ({ show, setShow, addresses, onSelectAddress, onAddNewAddress, onUpdateAddress, onDeleteAddress }) => {
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editAddressId, setEditAddressId] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [addressToDelete, setAddressToDelete] = useState(null);
+
     const [newAddress, setNewAddress] = useState({
         receiver_name: '', phone: '', specific_address: '', ward: '', district: '', province: '', is_default: false
     });
@@ -38,9 +42,16 @@ const AddressModal = ({ show, setShow, addresses, onSelectAddress, onAddNewAddre
 
     const handleDeleteClick = (e, id) => {
         e.stopPropagation();
-        if (window.confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) {
-            onDeleteAddress(id);
+        setAddressToDelete(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const executeDelete = () => {
+        if (addressToDelete) {
+            onDeleteAddress(addressToDelete);
         }
+        setShowDeleteConfirm(false);
+        setAddressToDelete(null);
     };
 
     const handleCloseForm = () => {
@@ -111,6 +122,16 @@ const AddressModal = ({ show, setShow, addresses, onSelectAddress, onAddNewAddre
                     )}
                 </div>
             </div>
+
+            <ConfirmModal
+                show={showDeleteConfirm}
+                onHide={() => setShowDeleteConfirm(false)}
+                onConfirm={executeDelete}
+                title="Xác nhận xóa"
+                message="Bạn có chắc chắn muốn xóa địa chỉ này?"
+                confirmText="Xác nhận Xóa"
+                type="danger"
+            />
         </div>
     );
 }

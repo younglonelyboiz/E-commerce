@@ -217,7 +217,7 @@ const CustomerChat = () => {
         <div className="customer-chat-container">
             {isOpen && (
                 <div className="chat-window shadow-lg">
-                    <div className="chat-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <div className="chat-header text-white d-flex justify-content-between align-items-center">
                         <span className="fw-bold"><i className="bi bi-headset me-2"></i> Hỗ trợ trực tuyến</span>
                         <button className="btn btn-sm text-white" onClick={toggleChat}>
                             <i className="bi bi-x-lg"></i>
@@ -232,39 +232,37 @@ const CustomerChat = () => {
                                     {msg.message_type === 'SYSTEM' ? (
                                         <div className="system-msg text-center w-100 my-2"><span className="badge bg-secondary opacity-75">{msg.content}</span></div>
                                     ) : (
-                                        <div className={`message-bubble ${msg.sender_type === 'USER' ? 'bg-danger text-white' : 'bg-light text-dark border'}`}>
-                                            {isImage ? (
-                                                <div>
-                                                    <img
-                                                        src={msg.image_url}
-                                                        alt="chat-image"
-                                                        style={{ maxWidth: '100%', borderRadius: '8px' }}
-                                                        onError={(e) => { e.target.style.display = 'none'; }}
-                                                    />
-                                                    {msg.content && msg.content !== '📷 Ảnh' && (
-                                                        <p className="mb-0 mt-2">{msg.content}</p>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                msg.content
-                                            )}
-                                            <div className={`small mt-1 ${msg.sender_type === 'USER' ? 'text-white-50 text-end' : 'text-muted text-start'}`} style={{ fontSize: '10px' }}>
+                                        <>
+                                            <div className="message-bubble">
+                                                {isImage ? (
+                                                    <div>
+                                                        <img
+                                                            src={msg.image_url}
+                                                            alt="chat-image"
+                                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                                        />
+                                                        {msg.content && msg.content !== '📷 Ảnh' && (
+                                                            <p className="mb-0 mt-2">{msg.content}</p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    msg.content
+                                                )}
+                                            </div>
+                                            <div className={`small mt-1 ${msg.sender_type === 'USER' ? 'text-muted text-end' : 'text-muted text-start'}`} style={{ fontSize: '10px' }}>
                                                 {formatTime(msg.createdAt || msg.created_at)}
                                             </div>
-                                        </div>
+                                        </>
                                     )}
                                 </div>
                             );
                         })}
                         {isAdminTyping && (
                             <div className="message-wrapper left">
-                                <div className="message-bubble bg-light text-dark border d-flex align-items-center">
-                                    <em className="text-muted small me-2">Nhân viên đang soạn tin</em>
-                                    <div className="typing-indicator">
-                                        <span className="dot"></span>
-                                        <span className="dot"></span>
-                                        <span className="dot"></span>
-                                    </div>
+                                <div className="typing-indicator shadow-sm">
+                                    <span className="dot"></span>
+                                    <span className="dot"></span>
+                                    <span className="dot"></span>
                                 </div>
                             </div>
                         )}
@@ -295,7 +293,7 @@ const CustomerChat = () => {
                             >
                                 <i className="bi bi-image"></i>
                             </button>
-                            <button type="submit" className="btn btn-danger" disabled={isUploading}>
+                            <button type="submit" className="btn btn-danger" disabled={isUploading || !inputValue.trim()}>
                                 <i className="bi bi-send-fill"></i>
                             </button>
                         </form>
@@ -303,9 +301,9 @@ const CustomerChat = () => {
                 </div>
             )}
 
-            <div className="chat-trigger-btn bg-danger text-white shadow" onClick={toggleChat}>
-                <i className="bi bi-chat-dots-fill fs-3"></i>
-                {unreadCount > 0 && <span className="unread-badge bg-warning text-dark">{unreadCount}</span>}
+            <div className="chat-trigger-btn shadow" onClick={toggleChat}>
+                <i className="bi bi-chat-dots-fill fs-3 text-white"></i>
+                {unreadCount > 0 && <span className="unread-badge">{unreadCount}</span>}
             </div>
         </div>
     );

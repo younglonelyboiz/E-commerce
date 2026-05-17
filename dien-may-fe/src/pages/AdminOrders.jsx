@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchAllOrders, fetchOrderDetail, updateOrderStatus } from '../services/adminOrderService';
 import { toast } from 'react-toastify';
 import ReactPaginate from 'react-paginate';
+import ConfirmModal from '../components/ConfirmModal';
 
 const AdminOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -17,6 +18,8 @@ const AdminOrders = () => {
     const [newStatus, setNewStatus] = useState('');
     const [newPaymentStatus, setNewPaymentStatus] = useState('');
     const [adminNote, setAdminNote] = useState('');
+
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
     const limit = 10;
 
@@ -65,9 +68,15 @@ const AdminOrders = () => {
     };
 
     const handleUpdateStatus = async () => {
-        if (newStatus === 'cancelled' && !window.confirm("Bạn có chắc chắn muốn HỦY đơn hàng này? Thao tác này sẽ tự động hoàn lại số lượng tồn kho.")) {
+        if (newStatus === 'cancelled') {
+            setShowCancelConfirm(true);
             return;
         }
+        await executeUpdateStatus();
+    };
+
+    const executeUpdateStatus = async () => {
+        setShowCancelConfirm(false);
         try {
             const res = await updateOrderStatus(selectedOrder.id, newStatus, adminNote, newPaymentStatus);
             if (res && res.EC === 0) {
@@ -276,6 +285,16 @@ const AdminOrders = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                show={showCancelConfirm}
+                onHide={() => setShowCancelConfirm(false)}
+                onConfirm={executeUpdateStatus}
+                title="Xác nhận hủy đơn hàng"
+                message="Bạn có chắc chắn muốn HỦY đơn hàng này? Thao tác này sẽ tự động hoàn lại số lượng tồn kho và không thể hoàn tác."
+                confirmText="Xác nhận Hủy"
+                type="danger"
+            />
         </div>
     );
 };

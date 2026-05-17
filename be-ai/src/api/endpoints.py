@@ -1,14 +1,29 @@
-# src/api/chat.py
+"""
+API Layer: Chat endpoint.
+Nhận request từ Node.js, validate bằng Pydantic, gọi RAGService.
+"""
 from fastapi import APIRouter, Request
+from pydantic import BaseModel
+
+
+class ChatRequest(BaseModel):
+    question: str
+    history: list = []  # [{role: "user"|"ai", content: "..."}]
+
 
 router = APIRouter()
 
+
 @router.post("/chat")
-async def chat(request: Request, payload: dict):
-    question = payload.get("question")
-    history = payload.get("history", []) # Nhận thêm history từ Node.js
-    
-    # Lấy service từ state đã khởi tạo ở main.py (như tôi hướng dẫn lúc nãy)
+async def chat(request: Request, payload: ChatRequest):
+    """
+    Endpoint nhận câu hỏi từ Node.js và trả về câu trả lời từ AI.
+
+    Node.js gửi:
+        { "question": "...", "history": [...] }
+
+    Trả về:
+        { "answer": "...", "source_products": [...] }
+    """
     service = request.app.state.rag_service
-    
-    return await service.get_answer(question, history)
+    return await service.get_answer(payload.question, payload.history)

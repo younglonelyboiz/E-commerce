@@ -5,14 +5,15 @@ pydantic==2.6.3
 pydantic-settings==2.2.1
 
 # Vector Database & Embeddings
-chromadb==0.4.24
-sentence-transformers==2.5.1
-torch==2.2.1 --index-url https://download.pytorch.org/whl/cpu
+chromadb>=0.5.0
 
 # AI & LLM
 # google-generativeai==0.4.1
 python-dotenv==1.0.1
 google-genai
+
+# Database (read-only access to MariaDB for real-time price/stock)
+pymysql==1.1.0
 
 # Utilities
 pandas==2.2.1

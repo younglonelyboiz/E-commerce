@@ -1,22 +1,24 @@
 import express from "express";
 import { checkUserJWT, checkAdminRole } from "../middlewares/JWTAction.js";
+import handleImageUpload from "../middlewares/uploadMiddleware.js";
+import uploadCloud from "../config/cloudinary.config.js";
+import aiChatRoutes from "./aiChatRoutes.js";
 
-// Đảm bảo tên hàm ở đây khớp chính xác với 'export const ...' ở Controller
 import {
-  readProducts, // Thay cho getProductsWithFilter và getProductByID vì dùng chung logic ID
+  readProducts,
   createProduct,
   deleteProductbyID,
   updateProductbyID,
-  getSaleList, // Tên hàm xử lý logic top-sale ở Controller
+  getSaleList,
   getSalingList,
-  getSuggestions, // Import hàm mới cho gợi ý tìm kiếm
-  readProductsForAdmin, // Tên hàm xử lý logic top-selling ở Controller
-  getProductDetail, // Thêm mới: Lấy chi tiết sản phẩm theo ID
+  getSuggestions,
+  readProductsForAdmin,
+  getProductDetail,
 } from "../controllers/productController.js";
-import uploadCloud from "../config/cloudinary.config.js";
 
 import { getAllBrands } from "../controllers/brandController.js";
 import { getAllCategories } from "../controllers/categoriesController.js";
+
 import {
   registerNewUser,
   handleLogin,
@@ -24,10 +26,10 @@ import {
   handleLogout,
   readUsersAdmin,
   readUserDetail,
-  changePassword, // Thêm controller xử lý đổi mật khẩu
+  changePassword,
   getGoogleAuthUrl,
   handleGoogleCallback,
-  handleQuickLogin, // Thêm dòng này
+  handleQuickLogin,
 } from "../controllers/userController.js";
 
 import { readAllRoles, updateRole } from "../controllers/roleController.js";
@@ -37,12 +39,14 @@ import {
   getCart,
   removeCartItem,
 } from "../controllers/cartController.js";
+
 import {
   getUserAddresses,
   addUserAddress,
   updateUserAddress,
   deleteUserAddress,
 } from "../controllers/addressController.js";
+
 import {
   createOrder,
   readAllOrders,
@@ -51,6 +55,7 @@ import {
   readOrdersByUser,
   cancelOrderByUser,
 } from "../controllers/orderController.js";
+
 import {
   createPaymentLink,
   handlePayosWebhook,
@@ -75,171 +80,84 @@ import {
 import { getDashboardData } from "../controllers/dashboardController.js";
 
 const initApiRoutes = (app) => {
-  const router = express.Router(); // --- Routes cho sản phẩm --- // Hàm readProducts xử lý cả lấy list (có filter) và lấy 1 sản phẩm theo ID
+  const router = express.Router();
 
-  // Middleware xử lý upload ảnh an toàn, bắt lỗi Multer/Cloudinary để tránh crash server
-  const handleImageUpload = (req, res, next) => {
-    uploadCloud.any()(req, res, (err) => {
-      if (err) {
-        console.error(">>> [Upload Error]:", err);
-        return res.status(500).json({
-          EC: -1,
-          EM: "Lỗi upload ảnh: " + (err.message || "Cloudinary error"),
-          DT: err,
-        });
-      }
-      next();
-    });
-  };
+  // --- AI Chat (module riêng, mount trước) ---
+  app.use("/api/v1/ai-chat", aiChatRoutes);
 
-  router.get(
-    "/admin/products",
-    checkUserJWT,
-    checkAdminRole,
-    readProductsForAdmin,
-  );
-
-  router.post(
-    "/create-product",
-    checkUserJWT,
-    checkAdminRole,
-    handleImageUpload,
-    createProduct,
-  );
-  router.delete(
-    "/delete-product/:id",
-    checkUserJWT,
-    checkAdminRole,
-    deleteProductbyID,
-  );
-  router.put(
-    "/update-product/:id",
-    checkUserJWT,
-    checkAdminRole,
-    handleImageUpload,
-    updateProductbyID,
-  ); // --- Routes cho trang chủ (Điện Máy Xanh style) ---
-
-  router.get("/admin/users", checkUserJWT, checkAdminRole, readUsersAdmin);
-  router.get("/admin/users/:id", checkUserJWT, checkAdminRole, readUserDetail);
-
-  // --- Routes Quản lý đơn hàng (Admin) ---
-  router.get("/admin/orders", checkUserJWT, checkAdminRole, readAllOrders);
-  router.get(
-    "/admin/orders/:id",
-    checkUserJWT,
-    checkAdminRole,
-    readOrderDetail,
-  );
-  router.put(
-    "/admin/orders/:id/status",
-    checkUserJWT,
-    checkAdminRole,
-    changeOrderStatus,
-  );
-
-  // --- Routes Dashboard (Admin) ---
-  router.get(
-    "/admin/dashboard",
-    checkUserJWT,
-    checkAdminRole,
-    getDashboardData,
-  );
-
-  // --- Routes Quản lý Đánh giá (Admin) ---
-  router.get(
-    "/admin/reviews",
-    checkUserJWT,
-    checkAdminRole,
-    getAllReviewsAdmin,
-  );
-  router.put(
-    "/admin/reviews/:id/reply",
-    checkUserJWT,
-    checkAdminRole,
-    replyReview,
-  );
-
+  // --- Products ---
+  router.get("/admin/products", checkUserJWT, checkAdminRole, readProductsForAdmin);
+  router.post("/create-product", checkUserJWT, checkAdminRole, handleImageUpload, createProduct);
+  router.delete("/delete-product/:id", checkUserJWT, checkAdminRole, deleteProductbyID);
+  router.put("/update-product/:id", checkUserJWT, checkAdminRole, handleImageUpload, updateProductbyID);
   router.get("/products", readProducts);
+  router.get("/products/suggestions", getSuggestions);
   router.get("/products/:id", getProductDetail);
-  router.get("/products/suggestions", getSuggestions); // Route mới cho gợi ý tìm kiếm
-
-  router.get("/role/read", checkUserJWT, checkAdminRole, readAllRoles);
-  router.put("/user/update-role", checkUserJWT, checkAdminRole, updateRole);
-
   router.get("/top-sale", getSaleList);
-  router.get("/top-selling", getSalingList); // --- Các routes khác ---
-
+  router.get("/top-selling", getSalingList);
   router.get("/brands", getAllBrands);
   router.get("/categories", getAllCategories);
 
-  // Route này yêu cầu phải có Cookie hợp lệ mới vào được
-  // --- Routes Giỏ hàng ---
+  // --- Users ---
+  router.post("/register-user", registerNewUser);
+  router.post("/login", handleLogin);
+  router.post("/logout", handleLogout);
+  router.post("/quick-login", handleQuickLogin);
+  router.get("/account", checkUserJWT, getUserAccount);
+  router.put("/user/change-password", checkUserJWT, changePassword);
+  router.get("/user/profile", checkUserJWT, (req, res) => {
+    return res.status(200).json({ EC: 0, EM: "Lấy thông tin người dùng thành công!", DT: req.user });
+  });
+  router.get("/admin/users", checkUserJWT, checkAdminRole, readUsersAdmin);
+  router.get("/admin/users/:id", checkUserJWT, checkAdminRole, readUserDetail);
+
+  // --- Roles ---
+  router.get("/role/read", checkUserJWT, checkAdminRole, readAllRoles);
+  router.put("/user/update-role", checkUserJWT, checkAdminRole, updateRole);
+
+  // --- Cart ---
   router.post("/cart/add", checkUserJWT, addToCart);
   router.get("/cart", checkUserJWT, getCart);
   router.delete("/cart/remove/:productId", checkUserJWT, removeCartItem);
 
-  // --- Routes Sổ địa chỉ ---
+  // --- Addresses ---
   router.get("/user/addresses", checkUserJWT, getUserAddresses);
   router.post("/user/addresses", checkUserJWT, addUserAddress);
   router.put("/user/addresses/:id", checkUserJWT, updateUserAddress);
   router.delete("/user/addresses/:id", checkUserJWT, deleteUserAddress);
 
-  // --- Routes Đặt hàng ---
+  // --- Orders ---
   router.post("/order/create", checkUserJWT, createOrder);
   router.get("/user/orders", checkUserJWT, readOrdersByUser);
   router.put("/user/orders/:id/cancel", checkUserJWT, cancelOrderByUser);
+  router.get("/admin/orders", checkUserJWT, checkAdminRole, readAllOrders);
+  router.get("/admin/orders/:id", checkUserJWT, checkAdminRole, readOrderDetail);
+  router.put("/admin/orders/:id/status", checkUserJWT, checkAdminRole, changeOrderStatus);
 
-  // --- Routes Thanh toán PayOS ---
+  // --- Payment ---
   router.post("/payment/webhook", handlePayosWebhook);
   router.post("/payment/create-link", checkUserJWT, createPaymentLink);
   router.post("/payment/retry", checkUserJWT, retryPaymentLink);
 
-  // --- Routes Google OAuth ---
-  router.get("/auth/google/url", getGoogleAuthUrl); // Xin URL Auth
-  router.get("/auth/google/callback", handleGoogleCallback); // Google trả mã Code về đây
+  // --- Auth Google ---
+  router.get("/auth/google/url", getGoogleAuthUrl);
+  router.get("/auth/google/callback", handleGoogleCallback);
 
-  // route review
+  // --- Reviews ---
   router.post("/review/create", checkUserJWT, createReview);
-  router.get("/review/list/:productId", getReviews); // API Public cho phép đọc đánh giá
+  router.get("/review/list/:productId", getReviews);
+  router.get("/admin/reviews", checkUserJWT, checkAdminRole, getAllReviewsAdmin);
+  router.put("/admin/reviews/:id/reply", checkUserJWT, checkAdminRole, replyReview);
 
-  // --- Routes Chat ---
+  // --- Chat (User ↔ Admin) ---
   router.get("/chat/unread-count", checkUserJWT, getUnreadCount);
   router.get("/chat/user-messages", checkUserJWT, getUserMessages);
-  router.get(
-    "/chat/conversations",
-    checkUserJWT,
-    checkAdminRole,
-    getConversations,
-  );
-  router.get(
-    "/chat/conversations/:id/messages",
-    checkUserJWT,
-    checkAdminRole,
-    getMessages,
-  );
-  router.post(
-    "/chat/upload-image",
-    checkUserJWT,
-    uploadCloud.single("image"),
-    uploadChatImage,
-  );
+  router.get("/chat/conversations", checkUserJWT, checkAdminRole, getConversations);
+  router.get("/chat/conversations/:id/messages", checkUserJWT, checkAdminRole, getMessages);
+  router.post("/chat/upload-image", checkUserJWT, uploadCloud.single("image"), uploadChatImage);
 
-  router.get("/account", checkUserJWT, getUserAccount);
-  router.post("/login", handleLogin);
-  router.post("/register-user", registerNewUser); // Route kiểm tra JWT
-  router.post("/logout", handleLogout);
-  router.put("/user/change-password", checkUserJWT, changePassword); // Endpoint đổi pass
-
-  router.get("/user/profile", checkUserJWT, (req, res) => {
-    return res.status(200).json({
-      EC: 0,
-      EM: "Lấy thông tin người dùng thành công!",
-      DT: req.user,
-    });
-  });
-
-  router.post("/quick-login", handleQuickLogin); // Thêm dòng này
+  // --- Dashboard ---
+  router.get("/admin/dashboard", checkUserJWT, checkAdminRole, getDashboardData);
 
   return app.use("/api/v1", router);
 };

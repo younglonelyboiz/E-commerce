@@ -31,6 +31,11 @@ export default class conversations extends Model {
           allowNull: true,
           defaultValue: "OPEN",
         },
+        type: {
+          type: DataTypes.STRING(20),
+          allowNull: false,
+          defaultValue: "HUMAN", // backward compatible: tất cả record cũ = HUMAN
+        },
         last_message_id: {
           type: DataTypes.INTEGER,
           allowNull: true,

@@ -1,0 +1,18 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# ChromaDB — mount qua volume, không copy vào image
+chroma_db/
+
+# Dev files
+*.json
+scripts/
+test*.py
+check_*.py
+.env
+.gitignore
+README*

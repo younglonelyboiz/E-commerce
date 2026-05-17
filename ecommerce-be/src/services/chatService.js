@@ -7,13 +7,13 @@ export const handleUserMessageService = async (userId, content) => {
   try {
     // 1. Tìm hội thoại đang OPEN của user, nếu chưa có thì tạo mới
     let conversation = await db.conversations.findOne({
-      where: { user_id: userId, status: "OPEN" },
+      where: { user_id: userId, status: "OPEN", type: { [Op.or]: [{ [Op.eq]: "HUMAN" }, { [Op.is]: null }] } },
       transaction,
     });
 
     if (!conversation) {
       conversation = await db.conversations.create(
-        { user_id: userId, status: "OPEN" },
+        { user_id: userId, status: "OPEN", type: "HUMAN" },
         { transaction },
       );
     }
@@ -72,7 +72,7 @@ export const markUserReadService = async (userId) => {
   try {
     await db.conversations.update(
       { unread_count_user: 0 },
-      { where: { user_id: userId, status: "OPEN" } },
+      { where: { user_id: userId, status: "OPEN", type: { [Op.or]: [{ [Op.eq]: "HUMAN" }, { [Op.is]: null }] } } },
     );
     return { EC: 0, EM: "Đã đọc", DT: null };
   } catch (error) {
@@ -272,7 +272,7 @@ export const closeConversationService = async (conversationId) => {
 export const getUnreadCountService = async (userId) => {
   try {
     const count = await db.conversations.sum("unread_count_user", {
-      where: { user_id: userId, status: "OPEN" },
+      where: { user_id: userId, status: "OPEN", type: { [Op.or]: [{ [Op.eq]: "HUMAN" }, { [Op.is]: null }] } },
     });
     return { EC: 0, EM: "OK", DT: count || 0 };
   } catch (error) {
@@ -283,7 +283,7 @@ export const getUnreadCountService = async (userId) => {
 export const getConversationsService = async () => {
   try {
     const conversations = await db.conversations.findAll({
-      where: { status: "OPEN" },
+      where: { status: "OPEN", type: { [Op.or]: [{ [Op.eq]: "HUMAN" }, { [Op.is]: null }] } },
       order: [["last_message_at", "DESC"]],
       include: [
         {
@@ -320,7 +320,7 @@ export const getMessagesService = async (conversationId) => {
 export const getUserMessagesService = async (userId) => {
   try {
     const conversation = await db.conversations.findOne({
-      where: { user_id: userId, status: "OPEN" },
+      where: { user_id: userId, status: "OPEN", type: { [Op.or]: [{ [Op.eq]: "HUMAN" }, { [Op.is]: null }] } },
     });
 
     if (!conversation) return { EC: 0, EM: "OK", DT: [] };
@@ -346,13 +346,13 @@ export const handleUserImageMessageService = async (
   try {
     // 1. Tìm hội thoại đang OPEN của user, nếu chưa có thì tạo mới
     let conversation = await db.conversations.findOne({
-      where: { user_id: userId, status: "OPEN" },
+      where: { user_id: userId, status: "OPEN", type: { [Op.or]: [{ [Op.eq]: "HUMAN" }, { [Op.is]: null }] } },
       transaction,
     });
 
     if (!conversation) {
       conversation = await db.conversations.create(
-        { user_id: userId, status: "OPEN" },
+        { user_id: userId, status: "OPEN", type: "HUMAN" },
         { transaction },
       );
     }
