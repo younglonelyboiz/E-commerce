@@ -5,11 +5,15 @@ def simple_rerank(query: str, results: dict):
     query_numbers = re.findall(r'\b\d+\b', query.lower())
     query_lower = query.lower()
     
-    docs = results['documents'][0]
-    metas = results['metadatas'][0]
+    matches = results['matches']
     combined = []
 
-    for d, m in zip(docs, metas):
+    for match in matches:
+        d = match['metadata']['text']
+        # Tạo bản sao metadata và xóa key 'text' ra
+        m = dict(match['metadata'])
+        if 'text' in m:
+            del m['text']
         score = 0
         
         # TÁCH TÊN SẢN PHẨM:
@@ -38,7 +42,7 @@ def simple_rerank(query: str, results: dict):
         combined.append({"doc": d, "meta": m, "score": score})
 
     # 2. Sắp xếp lại danh sách
-    # Thằng nào score cao lên đầu. Nếu bằng score, giữ nguyên thứ tự của ChromaDB
+    # Thằng nào score cao lên đầu. Nếu bằng score, giữ nguyên thứ tự của Pinecone
     sorted_res = sorted(combined, key=lambda x: x['score'], reverse=True)
     
     return [x['doc'] for x in sorted_res], [x['meta'] for x in sorted_res]

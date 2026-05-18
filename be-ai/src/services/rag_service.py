@@ -3,7 +3,7 @@ Service Layer: RAG pipeline với query rewrite và product enrichment.
 
 Luồng:
   1. Query Rewrite (LLM #1 nhẹ) — dùng history để rewrite câu hỏi
-  2. Vector Search (ChromaDB) — dùng query đã rewrite
+  2. Vector Search (Pinecone) — dùng query đã rewrite
   3. Rerank — rule-based
   4. Product Enrichment (MariaDB READ-ONLY) — lấy giá/tồn kho real-time
   5. Generate Answer (LLM #2) — trả lời đầy đủ ngữ cảnh
@@ -22,7 +22,7 @@ class RAGService:
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
         self.vector_repo = VectorRepository()
         self.product_repo = ProductRepository()
-        self.model_name = "gemini-2.5-flash"
+        self.model_name = "gemini-3.1-flash-lite"
 
     # ------------------------------------------------------------------ #
     #  Private: Query Rewrite                                              #

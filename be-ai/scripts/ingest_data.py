@@ -6,7 +6,7 @@ import sys
 be_ai_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(be_ai_dir)
 sys.path.append(os.path.join(be_ai_dir, 'src'))
-from src.database.chroma_client import get_collection
+from src.database.pinecone_client import get_pinecone_index, get_embedding_helper
 
 def main():
     # Sửa lại đường dẫn nếu file JSON nằm ngoài root
@@ -15,7 +15,8 @@ def main():
     with open(json_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
-    collection = get_collection()
+    index = get_pinecone_index()
+    embedding_helper = get_embedding_helper()
     rows = data['rows']
     
     documents = []
@@ -36,13 +37,21 @@ def main():
             "status": item['status']
         })
     
-    # Dùng upsert để nếu chạy lại nó sẽ cập nhật chứ không ghi đè trùng
-    collection.upsert(
-        documents=documents, 
-        ids=ids,
-        metadatas=metadatas
-    )
-    print(f" Đã nạp thành công {len(documents)} sản phẩm vào Vector DB!")
+    # 1. Tạo embeddings cho tất cả documents
+    print(" Dang tao embeddings cho san pham...")
+    embeddings = embedding_helper.embed_documents(documents)
+    
+    # 2. Chuẩn bị dữ liệu cho Pinecone
+    vectors_to_upsert = []
+    for id_str, vector, document, meta in zip(ids, embeddings, documents, metadatas):
+        meta_with_doc = dict(meta)
+        meta_with_doc['text'] = document # Lưu document vào metadata
+        vectors_to_upsert.append((id_str, vector, meta_with_doc))
+        
+    # 3. Upsert lên Pinecone
+    print(" Dang day du lieu len Pinecone...")
+    index.upsert(vectors=vectors_to_upsert)
+    print(f" Da nap thanh cong {len(documents)} san pham vao Vector DB!")
 
 if __name__ == "__main__":
     main()

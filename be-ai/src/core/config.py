@@ -8,8 +8,9 @@ class Settings(BaseSettings):
     PORT: int
 
     # Cấu hình RAG
-    CHROMA_DB_DIR: str = "chroma_db"
-    EMBEDDING_MODEL: str = "gemini-embedding-2"
+    PINECONE_API_KEY: str
+    PINECONE_INDEX_NAME: str
+    EMBEDDING_MODEL: str = "llama-text-embed-v2"
 
     # MariaDB — READ-ONLY (dùng cùng credentials với Node, chỉ SELECT)
     DB_HOST: str = "db"
