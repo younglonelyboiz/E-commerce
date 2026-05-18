@@ -21,5 +21,6 @@ app = FastAPI(title="Dien May AI Service", lifespan=lifespan)
 app.include_router(chat_router, prefix="/api/v1")
 
 @app.get("/")
+@app.head("/")
 async def root():
     return {"message": "AI Service is online!"}
