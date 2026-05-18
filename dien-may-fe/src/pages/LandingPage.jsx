@@ -206,7 +206,7 @@ function Hero() {
           <FadeIn delay={80}>
             {/* Giant Typography, tight tracking */}
             <h1
-              className="text-6xl md:text-[7rem] lg:text-[8rem] leading-[0.9] font-display font-black tracking-tighter"
+              className="text-5xl md:text-[7rem] lg:text-[8rem] leading-[0.9] font-display font-black tracking-tighter"
               style={{ color: '#0f172a' }}
             >
               Mua sắm.<br />
@@ -301,7 +301,7 @@ function Features() {
       <div className="mx-auto max-w-7xl">
         <FadeIn>
           <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-7xl font-display font-black tracking-tighter" style={{ color: '#0f172a' }}>
+            <h2 className="text-4xl md:text-7xl font-display font-black tracking-tighter" style={{ color: '#0f172a' }}>
               Kiến trúc{' '}
               <span style={{ color: '#0ea5e9' }}>tân tiến nhất</span>
             </h2>
@@ -371,7 +371,7 @@ function PlatformSpotlight() {
             <span className="text-sm font-bold tracking-widest uppercase" style={{ color: '#0ea5e9' }}>
               Trải nghiệm cốt lõi
             </span>
-            <h2 className="mt-2 text-5xl md:text-6xl font-display font-black leading-[1.05] tracking-tighter" style={{ color: '#0f172a' }}>
+            <h2 className="mt-2 text-4xl md:text-6xl font-display font-black leading-[1.05] tracking-tighter" style={{ color: '#0f172a' }}>
               Trải nghiệm<br />
               chuẩn tương lai.
             </h2>
@@ -464,7 +464,7 @@ function CTA() {
 
       <FadeIn>
         <div ref={ctaRef} className="relative z-10 mx-auto max-w-3xl">
-          <h2 className="text-5xl md:text-[4.5rem] font-display font-black text-white leading-[1.05] tracking-tighter">
+          <h2 className="text-4xl md:text-[4.5rem] font-display font-black text-white leading-[1.05] tracking-tighter">
             Sẵn sàng để cảm nhận<br />
             <span style={{ color: '#bae6fd' }}>sự khác biệt?</span>
           </h2>
